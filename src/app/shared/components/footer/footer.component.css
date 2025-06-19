@@ -1,0 +1,28 @@
+.footer {
+  width: 100%;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+.footer a {
+  color: #0d6efd;
+  transition: color 0.2s;
+}
+
+.footer a:hover {
+  color: #0a58ca;
+  text-decoration: underline;
+}
+
+.footer .bi {
+  font-size: 1.2rem;
+  vertical-align: middle;
+}
+
+@media (max-width: 767.98px) {
+  .footer .row > div {
+    text-align: center !important;
+  }
+}

@@ -1,0 +1,74 @@
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+  <div class="container-fluid">
+    <!-- Logo -->
+    <a class="navbar-brand d-flex align-items-center" href="/">
+      <img src="assets/logo.svg" alt="Logo" height="36" class="me-2" />
+      <span class="fw-bold">Enteratelo</span>
+    </a>
+
+    <!-- Hamburger button for mobile -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      (click)="showMobileMenu = true"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Desktop Navbar content -->
+    <div
+      class="collapse navbar-collapse justify-content-end d-none d-lg-flex"
+      id="navbarSections"
+    >
+      <ul class="navbar-nav ms-auto align-items-center">
+        <!-- Sections Dropdown -->
+        <li class="nav-item dropdown w-100">
+          <button
+            class="btn btn-outline-primary w-100"
+            (click)="showMobileMenu = true"
+          >
+            Secciones
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Mobile Fullscreen Menu Overlay -->
+  <div class="mobile-menu-overlay" *ngIf="showMobileMenu">
+    <div
+      class="mobile-menu-header d-flex justify-content-between align-items-center"
+    >
+      <div>
+        <button (click)="goToLogin()" class="login-link">Login</button>
+      </div>
+      <button
+        class="close-btn"
+        (click)="showMobileMenu = false"
+        aria-label="Close menu"
+      >
+        close <span style="font-size: 2rem; line-height: 1">&times;</span>
+      </button>
+    </div>
+    <div class="mobile-menu-search">
+      <input type="text" placeholder="Search" />
+      <span class="search-icon">&#128269;</span>
+    </div>
+    <ul class="mobile-menu-sections">
+      <li *ngFor="let section of sections">
+        <a href="{{ section.link }}">
+          {{ section.name }}
+          <span class="plus-icon">+</span>
+        </a>
+      </li>
+    </ul>
+    <button class="subscribe-btn">Subscribe</button>
+    <div class="mobile-menu-social">
+      <a href="#"><i class="fa fa-facebook"></i></a>
+      <a href="#"><i class="fa fa-instagram"></i></a>
+      <a href="#"><i class="fa fa-youtube"></i></a>
+      <a href="#"><i class="fa fa-rss"></i></a>
+    </div>
+  </div>
+</nav>
