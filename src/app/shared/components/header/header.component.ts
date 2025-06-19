@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { fromLanding } from '../../store/selectors';
 import { Subject, takeUntil } from 'rxjs';
+import { faBars } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-header',
@@ -14,6 +15,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   public selectLandingState$ = this.store.select(
     fromLanding.selectLandingState
   );
+
+  faBars = faBars;
 
   private unsubscribe$ = new Subject<void>();
 
