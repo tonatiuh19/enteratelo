@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Construction } from "lucide-react";
 import { categories } from "@/services/data.service";
+import { Layout } from "@/components/shared";
 
 export default function CategoryPage() {
   const { categoryId } = useParams();
@@ -11,7 +12,7 @@ export default function CategoryPage() {
 
   if (!category) {
     return (
-      <div className="min-h-screen bg-background">
+      <Layout showBreakingNews={false}>
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Categoría no encontrada</h1>
@@ -23,49 +24,12 @@ export default function CategoryPage() {
             </Link>
           </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <Link to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-lg">
-                    M
-                  </span>
-                </div>
-                <span className="text-xl font-bold text-foreground">
-                  Magazín
-                </span>
-              </Link>
-
-              <nav className="hidden lg:flex space-x-6">
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    to={`/categoria/${cat.id}`}
-                    className={`text-sm font-medium transition-colors ${
-                      cat.id === categoryId
-                        ? "text-primary"
-                        : "text-foreground/80 hover:text-foreground"
-                    }`}
-                  >
-                    <span className="mr-1">{cat.icon}</span>
-                    {cat.name}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <Layout showBreakingNews={false}>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto text-center">
           <div
@@ -113,6 +77,6 @@ export default function CategoryPage() {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }

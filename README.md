@@ -17,9 +17,10 @@ client/                   # React SPA frontend
 ├── components/
 │   ├── ui/              # Radix UI component library
 │   └── shared/          # Shared application components
-│       ├── Header.tsx   # Site header component
-│       ├── Footer.tsx   # Site footer component
+│       ├── Header.tsx   # Site header with navigation
+│       ├── Footer.tsx   # Site footer with links and newsletter
 │       ├── ArticleCard.tsx # Article card component
+│       ├── Layout.tsx   # Main layout wrapper component
 │       └── index.ts     # Component exports
 ├── pages/               # Route components
 │   ├── Index.tsx        # Home page
@@ -70,9 +71,10 @@ The site is configured for Vercel deployment with:
 
 ### Shared Components
 
-- **Header**: Main navigation with logo, search, and menu
-- **Footer**: Site footer with links and newsletter signup
-- **ArticleCard**: Reusable article preview component
+- **Layout**: Main layout wrapper that includes Header, Footer, and optional breaking news ticker
+- **Header**: Main navigation with logo, search, category links, and mobile menu
+- **Footer**: Site footer with categories, newsletter signup, and legal links
+- **ArticleCard**: Reusable article preview component with metadata and styling
 
 ### Data Service
 
@@ -86,7 +88,9 @@ All content is managed through the `data.service.ts` file which includes:
 
 ✅ Removed Express server and API dependencies
 ✅ Moved mock data to services folder
-✅ Created shared component library
+✅ Created shared component library with Layout pattern
+✅ Implemented reusable Layout component with Header and Footer
+✅ Added mobile-responsive navigation and breaking news ticker
 ✅ Configured for Vercel deployment
 ✅ Simplified build process for static hosting
 ✅ Removed unused Angular and server files

@@ -1,53 +1,80 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Menu, Mail, Twitter, Facebook, Instagram } from "lucide-react";
+import { Search, Menu } from "lucide-react";
+import { categories } from "@/services/data.service";
 
-interface HeaderProps {
-  onMenuClick?: () => void;
-}
+export function Header() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-export function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={onMenuClick}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">
-                E
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-8">
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-lg">
+                  E
+                </span>
+              </div>
+              <span className="text-xl font-bold text-foreground">
+                Entérate.lo
               </span>
-            </div>
-            <span className="font-bold text-xl hidden sm:block">
-              Entérate.lo
-            </span>
-          </Link>
-        </div>
+            </Link>
 
-        <div className="flex-1 max-w-md mx-4 hidden md:block">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input placeholder="Buscar noticias..." className="pl-10" />
+            <nav className="hidden lg:flex space-x-6">
+              {categories.map((category) => (
+                <Link
+                  key={category.id}
+                  to={`/categoria/${category.id}`}
+                  className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+                >
+                  <span className="mr-1">{category.icon}</span>
+                  {category.name}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Buscar artículos..." className="w-48" />
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Search className="h-5 w-5" />
-          </Button>
-          <Button variant="outline" size="sm" className="hidden md:flex">
-            Suscribirse
-          </Button>
-        </div>
+        {mobileMenuOpen && (
+          <div className="lg:hidden py-4 space-y-2">
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                to={`/categoria/${category.id}`}
+                className="block py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <span className="mr-2">{category.icon}</span>
+                {category.name}
+              </Link>
+            ))}
+            <div className="pt-2">
+              <div className="flex items-center space-x-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar artículos..." className="flex-1" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

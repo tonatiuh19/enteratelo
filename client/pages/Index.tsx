@@ -20,10 +20,8 @@ import {
   Twitter,
   Facebook,
   Instagram,
-  Menu,
   Search,
   Play,
-  Zap,
   Star,
   MessageCircle,
   BarChart3,
@@ -36,19 +34,17 @@ import {
   mockArticles,
   categories,
   socialPosts,
-  breakingNews,
   editorsPicks,
   videoContent,
   liveUpdates,
   polls,
   liveScores,
 } from "@/services/data.service";
+import { Layout } from "@/components/shared";
 
 export default function Index() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [currentBreaking, setCurrentBreaking] = useState(0);
   const [email, setEmail] = useState("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedPollOption, setSelectedPollOption] = useState<string | null>(
     null,
   );
@@ -65,13 +61,6 @@ export default function Index() {
     }, 6000);
     return () => clearInterval(timer);
   }, [featuredArticles.length]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentBreaking((prev) => (prev + 1) % breakingNews.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, []);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % featuredArticles.length);
@@ -94,94 +83,7 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Breaking News Ticker */}
-      <div className="bg-red-600 text-white py-2 overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center">
-            <div className="flex items-center space-x-2 mr-4 min-w-max">
-              <Zap className="h-4 w-4" />
-              <span className="font-bold text-sm">ÚLTIMA HORA</span>
-            </div>
-            <div className="flex animate-pulse">
-              <span className="text-sm whitespace-nowrap">
-                {breakingNews[currentBreaking]}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <Link to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-lg">
-                    M
-                  </span>
-                </div>
-                <span className="text-xl font-bold text-foreground">
-                  Magazín
-                </span>
-              </Link>
-
-              <nav className="hidden lg:flex space-x-6">
-                {categories.map((category) => (
-                  <Link
-                    key={category.id}
-                    to={`/categoria/${category.id}`}
-                    className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-                  >
-                    <span className="mr-1">{category.icon}</span>
-                    {category.name}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="hidden md:flex items-center space-x-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar artículos..." className="w-48" />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
-          {mobileMenuOpen && (
-            <div className="lg:hidden py-4 space-y-2">
-              {categories.map((category) => (
-                <Link
-                  key={category.id}
-                  to={`/categoria/${category.id}`}
-                  className="block py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <span className="mr-2">{category.icon}</span>
-                  {category.name}
-                </Link>
-              ))}
-              <div className="pt-2">
-                <div className="flex items-center space-x-2">
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Buscar artículos..." className="flex-1" />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
+    <Layout>
       {/* Enhanced Hero Carousel */}
       <section className="relative overflow-hidden">
         <div className="relative h-[70vh] lg:h-[80vh]">
@@ -1024,113 +926,6 @@ export default function Index() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-muted/30 border-t mt-16">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-lg">
-                    M
-                  </span>
-                </div>
-                <span className="text-xl font-bold">Magazín</span>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Tu fuente confiable de noticias y contenido de calidad en
-                español.
-              </p>
-              <div className="flex space-x-3">
-                <Button variant="outline" size="icon">
-                  <Twitter className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon">
-                  <Facebook className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon">
-                  <Instagram className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-3">Categorías</h4>
-              <ul className="space-y-2 text-sm">
-                {categories.slice(0, 3).map((category) => (
-                  <li key={category.id}>
-                    <Link
-                      to={`/categoria/${category.id}`}
-                      className="text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {category.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-3">Más Categorías</h4>
-              <ul className="space-y-2 text-sm">
-                {categories.slice(3).map((category) => (
-                  <li key={category.id}>
-                    <Link
-                      to={`/categoria/${category.id}`}
-                      className="text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {category.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-3">Enlaces</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link
-                    to="/sobre-nosotros"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Sobre Nosotros
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/contacto"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Contacto
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/publicidad"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Publicidad
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <Separator className="my-8" />
-          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
-            <p>&copy; 2024 Magazín. Todos los derechos reservados.</p>
-            <div className="flex space-x-4 mt-4 md:mt-0">
-              <Link to="/privacidad" className="hover:text-foreground">
-                Privacidad
-              </Link>
-              <Link to="/terminos" className="hover:text-foreground">
-                Términos
-              </Link>
-              <Link to="/contacto" className="hover:text-foreground">
-                Contacto
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </Layout>
   );
 }

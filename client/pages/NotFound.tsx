@@ -1,5 +1,8 @@
 import React, { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Home } from "lucide-react";
+import { Layout } from "@/components/shared";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,15 +15,29 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-        <a href="/" className="text-blue-500 hover:text-blue-700 underline">
-          Return to Home
-        </a>
+    <Layout showBreakingNews={false}>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="text-8xl font-bold text-primary mb-4">404</div>
+          <h1 className="text-2xl font-bold mb-4">Página no encontrada</h1>
+          <p className="text-muted-foreground mb-6">
+            Lo sentimos, la página que buscas no existe o ha sido movida.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/">
+              <Button>
+                <Home className="h-4 w-4 mr-2" />
+                Ir al inicio
+              </Button>
+            </Link>
+            <Button variant="outline" onClick={() => window.history.back()}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver atrás
+            </Button>
+          </div>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 

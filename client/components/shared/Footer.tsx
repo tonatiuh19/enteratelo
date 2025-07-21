@@ -1,11 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, Twitter, Facebook, Instagram } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { categories } from "@/services/data.service";
 
 export function Footer() {
+  const [email, setEmail] = useState("");
+
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Newsletter subscription:", email);
+    setEmail("");
+  };
   return (
     <footer className="bg-muted/30 border-t mt-16">
       <div className="container mx-auto px-4 py-12">
@@ -44,61 +52,31 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="font-semibold">Categorías</h3>
             <div className="space-y-2 text-sm">
-              <Link
-                to="/categoria/deportes"
-                className="block text-muted-foreground hover:text-foreground"
-              >
-                Deportes
-              </Link>
-              <Link
-                to="/categoria/tech"
-                className="block text-muted-foreground hover:text-foreground"
-              >
-                Tecnología
-              </Link>
-              <Link
-                to="/categoria/ciencia"
-                className="block text-muted-foreground hover:text-foreground"
-              >
-                Ciencia
-              </Link>
-              <Link
-                to="/categoria/entretenimiento"
-                className="block text-muted-foreground hover:text-foreground"
-              >
-                Entretenimiento
-              </Link>
+              {categories.slice(0, 3).map((category) => (
+                <Link
+                  key={category.id}
+                  to={`/categoria/${category.id}`}
+                  className="block text-muted-foreground hover:text-foreground"
+                >
+                  {category.name}
+                </Link>
+              ))}
             </div>
           </div>
 
-          {/* About */}
+          {/* More Categories */}
           <div className="space-y-4">
-            <h3 className="font-semibold">Acerca de</h3>
+            <h3 className="font-semibold">Más Categorías</h3>
             <div className="space-y-2 text-sm">
-              <Link
-                to="/sobre-nosotros"
-                className="block text-muted-foreground hover:text-foreground"
-              >
-                Sobre Nosotros
-              </Link>
-              <Link
-                to="/contacto"
-                className="block text-muted-foreground hover:text-foreground"
-              >
-                Contacto
-              </Link>
-              <Link
-                to="/publicidad"
-                className="block text-muted-foreground hover:text-foreground"
-              >
-                Publicidad
-              </Link>
-              <Link
-                to="/privacidad"
-                className="block text-muted-foreground hover:text-foreground"
-              >
-                Privacidad
-              </Link>
+              {categories.slice(3).map((category) => (
+                <Link
+                  key={category.id}
+                  to={`/categoria/${category.id}`}
+                  className="block text-muted-foreground hover:text-foreground"
+                >
+                  {category.name}
+                </Link>
+              ))}
             </div>
           </div>
 
@@ -108,12 +86,18 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               Recibe las noticias más importantes en tu email.
             </p>
-            <div className="space-y-2">
-              <Input placeholder="Tu email" type="email" />
-              <Button className="w-full" size="sm">
+            <form onSubmit={handleNewsletterSubmit} className="space-y-2">
+              <Input
+                placeholder="Tu email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <Button type="submit" className="w-full" size="sm">
                 Suscribirse
               </Button>
-            </div>
+            </form>
           </div>
         </div>
 

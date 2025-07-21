@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { mockArticles, categories } from "@/services/data.service";
+import { Layout } from "@/components/shared";
 
 interface Comment {
   id: string;
@@ -194,44 +195,7 @@ export default function ArticlePage() {
   `;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <Link to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-lg">
-                    M
-                  </span>
-                </div>
-                <span className="text-xl font-bold text-foreground">
-                  Magazín
-                </span>
-              </Link>
-
-              <nav className="hidden lg:flex space-x-6">
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    to={`/categoria/${cat.id}`}
-                    className={`text-sm font-medium transition-colors ${
-                      cat.id === article.category
-                        ? "text-primary"
-                        : "text-foreground/80 hover:text-foreground"
-                    }`}
-                  >
-                    <span className="mr-1">{cat.icon}</span>
-                    {cat.name}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <Layout showBreakingNews={false}>
       {/* Article Header */}
       <div className="bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto px-4 py-8">
@@ -639,6 +603,6 @@ export default function ArticlePage() {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
