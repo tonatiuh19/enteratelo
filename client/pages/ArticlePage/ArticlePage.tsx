@@ -26,7 +26,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { mockArticles, categories } from "@/services/data.service";
+import {
+  mockArticles,
+  categories,
+  getCommentsForArticle,
+} from "@/services/data.service";
 import { Layout } from "@/components/Layout/Layout";
 import "./ArticlePage.css";
 
@@ -43,6 +47,9 @@ export default function ArticlePage() {
   const relatedArticles = mockArticles
     .filter((a) => a.category === article.category && a.id !== article.id)
     .slice(0, 3);
+
+  // Get comments for this article
+  const articleComments = getCommentsForArticle(article.id);
 
   // Utility function to scroll to top
   const scrollToTop = (behavior: "smooth" | "instant" = "smooth") => {
@@ -373,7 +380,7 @@ export default function ArticlePage() {
                 {/* Comments Section */}
                 <div className="article-page__comments">
                   <h3 className="article-page__comments-title">
-                    Comentarios ({mockComments.length})
+                    Comentarios ({articleComments.length})
                   </h3>
 
                   <Card className="article-page__comment-form">
@@ -402,7 +409,7 @@ export default function ArticlePage() {
                   </Card>
 
                   <div className="article-page__comment-list">
-                    {mockComments.map((comment) => (
+                    {articleComments.map((comment) => (
                       <div key={comment.id} className="article-page__comment">
                         <div className="article-page__comment-header">
                           <Avatar>
@@ -413,6 +420,11 @@ export default function ArticlePage() {
                           <div>
                             <span className="article-page__comment-author">
                               {comment.author}
+                              {comment.verified && (
+                                <span className="ml-1 text-primary text-xs">
+                                  ✓
+                                </span>
+                              )}
                             </span>
                             <div className="article-page__comment-time">
                               {comment.timestamp}
@@ -604,31 +616,3 @@ export default function ArticlePage() {
     </Layout>
   );
 }
-
-// Mock comments data for now
-const mockComments = [
-  {
-    id: "1",
-    author: "Carlos Ruiz",
-    content:
-      "Excelente artículo. La tecnología en los estadios realmente está cambiando la experiencia.",
-    timestamp: "Hace 2 horas",
-    likes: 12,
-  },
-  {
-    id: "2",
-    author: "Maria González",
-    content:
-      "Me encanta cómo explicaste el tema del 5G. Muy fácil de entender.",
-    timestamp: "Hace 4 horas",
-    likes: 8,
-  },
-  {
-    id: "3",
-    author: "Diego Fernández",
-    content:
-      "¿Crees que esta tecnología llegará pronto a estadios más pequeños?",
-    timestamp: "Hace 1 día",
-    likes: 5,
-  },
-];

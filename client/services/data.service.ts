@@ -20,6 +20,16 @@ export interface Article {
   metaKeywords?: string[];
 }
 
+export interface Comment {
+  id: string;
+  articleId: string;
+  author: string;
+  content: string;
+  timestamp: string;
+  likes: number;
+  verified?: boolean;
+}
+
 export const categories = [
   { id: "deportes", name: "Deportes", icon: "⚽", color: "bg-green-500" },
   { id: "tech", name: "Tech", icon: "💻", color: "bg-blue-500" },
@@ -1304,3 +1314,404 @@ export const liveScores = [
     venue: "Allianz Stadium",
   },
 ];
+
+export const mockComments: Comment[] = [
+  // Comments for Article 1 (Sports Technology)
+  {
+    id: "c1-1",
+    articleId: "1",
+    author: "Carlos Mendoza",
+    content:
+      "Excelente artículo. Muy bien explicado el impacto de estas tecnologías en el deporte moderno. ¿Sabéis cuándo llegará el 5G al Wanda Metropolitano?",
+    timestamp: "Hace 2 horas",
+    likes: 12,
+    verified: false,
+  },
+  {
+    id: "c1-2",
+    articleId: "1",
+    author: "Miguel Santos",
+    content:
+      "Me parece increíble cómo la tecnología está transformando la experiencia en los estadios. El año pasado estuve en el Camp Nou y ya se nota la diferencia con las aplicaciones.",
+    timestamp: "Hace 3 horas",
+    likes: 8,
+    verified: false,
+  },
+  {
+    id: "c1-3",
+    articleId: "1",
+    author: "Ana García",
+    content:
+      "Como desarrolladora que trabaja en sport-tech, puedo confirmar que esto es solo el comienzo. La IA va a revolucionar completamente cómo entendemos el deporte.",
+    timestamp: "Hace 5 horas",
+    likes: 15,
+    verified: true,
+  },
+  {
+    id: "c1-4",
+    articleId: "1",
+    author: "Roberto Fernández",
+    content:
+      "¡Fascinante! Me encanta ver cómo la tecnología mejora la experiencia del aficionado. ¿Creéis que esto llegará también a estadios de Segunda División?",
+    timestamp: "Hace 6 horas",
+    likes: 6,
+    verified: false,
+  },
+
+  // Comments for Article 2 (AI Business)
+  {
+    id: "c2-1",
+    articleId: "2",
+    author: "Laura Martín",
+    content:
+      "En nuestra empresa implementamos IA hace 6 meses y los resultados han sido espectaculares. La productividad aumentó un 40% tal como menciona el artículo.",
+    timestamp: "Hace 1 hora",
+    likes: 23,
+    verified: true,
+  },
+  {
+    id: "c2-2",
+    articleId: "2",
+    author: "David Chen",
+    content:
+      "Como CEO de una startup, puedo confirmar que la IA es fundamental. Sin embargo, hay que tener cuidado con la implementación y la formación del equipo.",
+    timestamp: "Hace 4 horas",
+    likes: 18,
+    verified: true,
+  },
+  {
+    id: "c2-3",
+    articleId: "2",
+    author: "Sandra López",
+    content:
+      "Muy buen análisis sobre el ROI. ¿Podrías hacer un artículo específico sobre qué tipo de IA implementar según el tamaño de la empresa?",
+    timestamp: "Hace 7 horas",
+    likes: 11,
+    verified: false,
+  },
+
+  // Comments for Article 3 (Alzheimer Research)
+  {
+    id: "c3-1",
+    articleId: "3",
+    author: "Dr. Elena Vega",
+    content:
+      "Como neuróloga, estoy muy emocionada con estos avances. Los resultados de los ensayos son realmente prometedores. ¿Cuándo comenzarán los ensayos en España?",
+    timestamp: "Hace 30 minutos",
+    likes: 34,
+    verified: true,
+  },
+  {
+    id: "c3-2",
+    articleId: "3",
+    author: "Carmen Ruiz",
+    content:
+      "Mi padre sufre de Alzheimer y esto nos da mucha esperanza. Gracias por explicarlo de manera tan clara y accesible.",
+    timestamp: "Hace 2 horas",
+    likes: 28,
+    verified: false,
+  },
+  {
+    id: "c3-3",
+    articleId: "3",
+    author: "Jorge Navarro",
+    content:
+      "Increíble avance científico. ¿Sabéis si esta terapia también podría funcionar para otras enfermedades neurodegenerativas como el Parkinson?",
+    timestamp: "Hace 5 horas",
+    likes: 14,
+    verified: false,
+  },
+
+  // Comments for Article 4 (Netflix Strategy)
+  {
+    id: "c4-1",
+    articleId: "4",
+    author: "Marta Silva",
+    content:
+      "Me parece genial que Netflix apueste por contenido local. Las series españolas están teniendo mucho éxito internacional.",
+    timestamp: "Hace 1 hora",
+    likes: 16,
+    verified: false,
+  },
+  {
+    id: "c4-2",
+    articleId: "4",
+    author: "Pablo Herrera",
+    content:
+      "La realidad virtual en series suena increíble. ¿Cuándo podremos probarlo? ¿Necesitaremos equipos especiales?",
+    timestamp: "Hace 3 horas",
+    likes: 9,
+    verified: false,
+  },
+  {
+    id: "c4-3",
+    articleId: "4",
+    author: "Isabella Torres",
+    content:
+      "Como productora audiovisual, veo que la competencia está forzando a todas las plataformas a innovar. Excelente análisis del mercado.",
+    timestamp: "Hace 6 horas",
+    likes: 12,
+    verified: true,
+  },
+
+  // Comments for Article 5 (Wellness Trends)
+  {
+    id: "c5-1",
+    articleId: "5",
+    author: "Sofía Morales",
+    content:
+      "Practico mindfulness digital desde el año pasado y la diferencia es notable. Recomiendo empezar poco a poco con desconexiones de 2 horas.",
+    timestamp: "Hace 45 minutos",
+    likes: 21,
+    verified: false,
+  },
+  {
+    id: "c5-2",
+    articleId: "5",
+    author: "Diego Castillo",
+    content:
+      "Me encanta el concepto de 'círculos de bienestar'. ¿Hay alguna manera de encontrar comunidades así en Madrid?",
+    timestamp: "Hace 2 horas",
+    likes: 13,
+    verified: false,
+  },
+  {
+    id: "c5-3",
+    articleId: "5",
+    author: "Andrea Molina",
+    content:
+      "Como coach de bienestar, confirmo que la demanda de este tipo de servicios ha crecido exponencialmente. La gente busca equilibrio real.",
+    timestamp: "Hace 4 horas",
+    likes: 17,
+    verified: true,
+  },
+
+  // Comments for Article 6 (Politics/Economics)
+  {
+    id: "c6-1",
+    articleId: "6",
+    author: "Fernando Costa",
+    content:
+      "Análisis muy equilibrado de las propuestas. Me ayuda a entender mejor las diferencias entre candidatos desde una perspectiva económica.",
+    timestamp: "Hace 1 hora",
+    likes: 31,
+    verified: false,
+  },
+  {
+    id: "c6-2",
+    articleId: "6",
+    author: "Patricia Jiménez",
+    content:
+      "Como economista, aprecio que se incluyan datos concretos y proyecciones realistas. Falta mencionar el impacto en las PYMES.",
+    timestamp: "Hace 3 horas",
+    likes: 24,
+    verified: true,
+  },
+  {
+    id: "c6-3",
+    articleId: "6",
+    author: "Ricardo Valdez",
+    content:
+      "¿Podrías hacer un análisis similar sobre las propuestas de política exterior? Me interesa ver cómo afectarían al comercio internacional.",
+    timestamp: "Hace 5 horas",
+    likes: 19,
+    verified: false,
+  },
+
+  // Comments for Article 7 (Barcelona Champions)
+  {
+    id: "c7-1",
+    articleId: "7",
+    author: "Marc Puig",
+    content:
+      "¡Qué noche más increíble! Estuve en el Camp Nou y la atmósfera era única. Pedri jugó como un veterano de 30 años.",
+    timestamp: "Hace 30 minutos",
+    likes: 45,
+    verified: false,
+  },
+  {
+    id: "c7-2",
+    articleId: "7",
+    author: "Carla Sánchez",
+    content:
+      "Como periodista deportiva, debo decir que fue una de las remontadas más épicas que he visto. Las estadísticas no mienten: dominación total.",
+    timestamp: "Hace 2 horas",
+    likes: 38,
+    verified: true,
+  },
+  {
+    id: "c7-3",
+    articleId: "7",
+    author: "Jordi Ramos",
+    content:
+      "Lewandowski demostró por qué es uno de los mejores delanteros del mundo. Ese primer gol cambió todo el partido.",
+    timestamp: "Hace 4 horas",
+    likes: 22,
+    verified: false,
+  },
+
+  // Comments for Article 8 (SpaceX Mars)
+  {
+    id: "c8-1",
+    articleId: "8",
+    author: "Dr. Alberto Ruiz",
+    content:
+      "Como astrofísico, este momento histórico me emociona profundamente. La humanidad acaba de dar el paso más importante hacia convertirnos en una especie multiplanetaria.",
+    timestamp: "Hace 15 minutos",
+    likes: 67,
+    verified: true,
+  },
+  {
+    id: "c8-2",
+    articleId: "8",
+    author: "María Fernández",
+    content:
+      "¡Increíble! Mi hija de 8 años vio el aterrizaje en directo y ahora quiere ser astronauta. Momentos así inspiran a las nuevas generaciones.",
+    timestamp: "Hace 1 hora",
+    likes: 42,
+    verified: false,
+  },
+  {
+    id: "c8-3",
+    articleId: "8",
+    author: "Carlos Mendoza",
+    content:
+      "Los datos sobre la Base Alpha son fascinantes. ¿Cómo van a manejar las tormentas de polvo marcianas? ¿Está previsto en el diseño?",
+    timestamp: "Hace 3 horas",
+    likes: 29,
+    verified: false,
+  },
+
+  // Comments for Article 9 (iPhone 16 Pro)
+  {
+    id: "c9-1",
+    articleId: "9",
+    author: "Alejandro Tech",
+    content:
+      "Apple Intelligence suena prometedor, pero espero que realmente funcione de forma local como prometen. La privacidad es fundamental.",
+    timestamp: "Hace 1 hora",
+    likes: 33,
+    verified: true,
+  },
+  {
+    id: "c9-2",
+    articleId: "9",
+    author: "Natalia Gómez",
+    content:
+      "Como fotógrafa profesional, las mejoras en la cámara me tienen muy intrigada. Si realmente rivalizan con equipos profesionales, será un game changer.",
+    timestamp: "Hace 2 horas",
+    likes: 27,
+    verified: true,
+  },
+  {
+    id: "c9-3",
+    articleId: "9",
+    author: "Rubén Martín",
+    content:
+      "Los precios se mantienen igual que el año pasado, eso está bien. Pero con tanta competencia, Apple necesita innovar más allá del hardware.",
+    timestamp: "Hace 4 horas",
+    likes: 18,
+    verified: false,
+  },
+
+  // Comments for Article 10 (Cannes Almodóvar)
+  {
+    id: "c10-1",
+    articleId: "10",
+    author: "Luisa Herrero",
+    content:
+      "Almodóvar siempre consigue sorprender. El tema de la soledad conectada es muy actual y necesario. Espero que gane la Palma de Oro.",
+    timestamp: "Hace 2 horas",
+    likes: 25,
+    verified: false,
+  },
+  {
+    id: "c10-2",
+    articleId: "10",
+    author: "Pablo Cinematográfico",
+    content:
+      "Como crítico de cine, creo que esta película podría ser la obra maestra de Almodóvar. La colaboración con Tilda Swinton promete mucho.",
+    timestamp: "Hace 4 horas",
+    likes: 31,
+    verified: true,
+  },
+  {
+    id: "c10-3",
+    articleId: "10",
+    author: "Cristina Velasco",
+    content:
+      "La competencia está muy reñida este año en Cannes. Villeneuve y Bong Joon-ho también tienen películas muy fuertes.",
+    timestamp: "Hace 6 horas",
+    likes: 14,
+    verified: false,
+  },
+
+  // Comments for Article 11 (Sustainable Travel)
+  {
+    id: "c11-1",
+    articleId: "11",
+    author: "Elena Viajera",
+    content:
+      "Acabo de regresar de Costa Rica siguiendo principios de turismo sostenible. La experiencia fue mucho más enriquecedora que un viaje tradicional.",
+    timestamp: "Hace 1 hora",
+    likes: 19,
+    verified: false,
+  },
+  {
+    id: "c11-2",
+    articleId: "11",
+    author: "Marcos Eco",
+    content:
+      "Como guía de turismo sostenible, agradezco que se difunda esta información. El turismo regenerativo es el futuro del sector.",
+    timestamp: "Hace 3 horas",
+    likes: 22,
+    verified: true,
+  },
+  {
+    id: "c11-3",
+    articleId: "11",
+    author: "Carmen Aventura",
+    content:
+      "¿Podrías recomendar agencias especializadas en turismo sostenible? Me interesa Bhután pero no sé cómo organizarlo responsablemente.",
+    timestamp: "Hace 5 horas",
+    likes: 16,
+    verified: false,
+  },
+
+  // Comments for Article 12 (Energy Crisis)
+  {
+    id: "c12-1",
+    articleId: "12",
+    author: "Ingeniero Verde",
+    content:
+      "Trabajo en el sector energético y puedo confirmar que la transformación ha sido increíble. En 18 meses hemos logrado lo que parecía imposible.",
+    timestamp: "Hace 45 minutos",
+    likes: 41,
+    verified: true,
+  },
+  {
+    id: "c12-2",
+    articleId: "12",
+    author: "Teresa Renovable",
+    content:
+      "Como investigadora en energías renovables, me emociona ver cómo la crisis se ha convertido en oportunidad. Europa lidera la transición mundial.",
+    timestamp: "Hace 2 horas",
+    likes: 35,
+    verified: true,
+  },
+  {
+    id: "c12-3",
+    articleId: "12",
+    author: "Antonio Economista",
+    content:
+      "El análisis económico es muy completo. ¿Cómo veis el impacto a largo plazo en la competitividad industrial europea?",
+    timestamp: "Hace 4 horas",
+    likes: 26,
+    verified: false,
+  },
+];
+
+// Helper function to get comments for a specific article
+export const getCommentsForArticle = (articleId: string): Comment[] => {
+  return mockComments.filter((comment) => comment.articleId === articleId);
+};

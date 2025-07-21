@@ -5,7 +5,6 @@
 .article-page__container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
 }
 
 /* Header Section */
@@ -87,7 +86,6 @@
 
 /* Content Wrapper */
 .article-page__content-wrapper {
-  padding: 48px 0;
 }
 
 /* Full Width Hero Section */
