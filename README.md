@@ -1,59 +1,100 @@
-# Enteratelo
+# Entérate.lo - News Website
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.8.
+A modern news website built with React, TypeScript, and Tailwind CSS, optimized for deployment on Vercel.
 
-## Development server
+## Tech Stack
 
-To start a local development server, run:
+- **Frontend**: React 18 + React Router 6 + TypeScript + Vite
+- **Styling**: TailwindCSS 3 + Radix UI Components
+- **Icons**: Lucide React
+- **Build Tool**: Vite
+- **Deployment**: Vercel
 
-```bash
-ng serve
+## Project Structure
+
+```
+client/                   # React SPA frontend
+├── components/
+│   ├── ui/              # Radix UI component library
+│   └── shared/          # Shared application components
+│       ├── Header.tsx   # Site header component
+│       ├── Footer.tsx   # Site footer component
+│       ├── ArticleCard.tsx # Article card component
+│       └── index.ts     # Component exports
+├── pages/               # Route components
+│   ├── Index.tsx        # Home page
+│   ├── ArticlePage.tsx  # Article detail page
+│   ├── CategoryPage.tsx # Category page
+│   └── NotFound.tsx     # 404 page
+├── services/            # Data services
+│   └── data.service.ts  # Mock data and types
+├── hooks/               # Custom React hooks
+├── lib/                 # Utility functions
+├── App.tsx             # App entry point with routing
+└── global.css          # Global styles and Tailwind config
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Key Features
 
-## Code scaffolding
+- **Static Site**: No API dependencies, uses local mock data
+- **Responsive Design**: Mobile-first responsive layout
+- **Modern UI**: Built with Radix UI components and Tailwind CSS
+- **Fast Performance**: Optimized with Vite for fast builds
+- **SEO Friendly**: Server-side ready for static generation
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Development
 
 ```bash
-ng generate --help
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
-## Building
+## Deployment
 
-To build the project run:
+The site is configured for Vercel deployment with:
 
-```bash
-ng build
-```
+- `vercel.json` configuration for SPA routing
+- Static build output in `dist/spa`
+- Optimized for Vercel's static hosting
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Components
 
-## Running unit tests
+### Shared Components
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+- **Header**: Main navigation with logo, search, and menu
+- **Footer**: Site footer with links and newsletter signup
+- **ArticleCard**: Reusable article preview component
 
-```bash
-ng test
-```
+### Data Service
 
-## Running end-to-end tests
+All content is managed through the `data.service.ts` file which includes:
 
-For end-to-end (e2e) testing, run:
+- Article data and types
+- Category definitions
+- Mock content for development
 
-```bash
-ng e2e
-```
+## Recent Changes
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+✅ Removed Express server and API dependencies
+✅ Moved mock data to services folder
+✅ Created shared component library
+✅ Configured for Vercel deployment
+✅ Simplified build process for static hosting
+✅ Removed unused Angular and server files
 
-## Additional Resources
+## Contributing
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test the build locally
+5. Submit a pull request
