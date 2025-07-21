@@ -320,7 +320,7 @@ export const mockArticles: Article[] = [
     readTime: 4,
     views: 15200,
     likes: 389,
-    featured: false,
+    featured: true,
     trending: true,
     tags: ["netflix", "streaming", "entretenimiento"],
     metaDescription:

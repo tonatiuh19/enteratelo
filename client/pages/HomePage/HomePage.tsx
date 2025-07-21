@@ -91,143 +91,204 @@ export default function HomePage() {
         {/* Enhanced Hero Carousel */}
         <section className="home-page__hero">
           <div className="home-page__hero-carousel">
-            {featuredArticles.map((article, index) => (
-              <div
-                key={article.id}
-                className={cn(
-                  "home-page__hero-slide",
-                  index === currentSlide
-                    ? "home-page__hero-slide--active"
-                    : index < currentSlide
-                      ? "home-page__hero-slide--prev"
-                      : "home-page__hero-slide--next",
-                )}
-              >
-                <div className="home-page__hero-image-container">
-                  <img
-                    src={article.imageUrl}
-                    alt={article.title}
-                    className="home-page__hero-image"
-                  />
-                  <div className="home-page__hero-overlay" />
-                  <div className="home-page__hero-overlay-side" />
+            <div className="home-page__hero-main">
+              {featuredArticles.map((article, index) => (
+                <div
+                  key={article.id}
+                  className={cn(
+                    "home-page__hero-slide",
+                    index === currentSlide
+                      ? "home-page__hero-slide--active"
+                      : index < currentSlide
+                        ? "home-page__hero-slide--prev"
+                        : "home-page__hero-slide--next",
+                  )}
+                >
+                  <div className="home-page__hero-image-container">
+                    <img
+                      src={article.imageUrl}
+                      alt={article.title}
+                      className="home-page__hero-image"
+                    />
+                    <div className="home-page__hero-overlay" />
+                    <div className="home-page__hero-overlay-side" />
 
-                  {/* Content Overlay */}
-                  <div className="home-page__hero-content">
-                    <div className="home-page__hero-content-wrapper">
-                      <Badge
-                        className={cn(
-                          "home-page__hero-category",
-                          categories.find((c) => c.id === article.category)
-                            ?.color || "bg-primary",
-                        )}
-                      >
-                        {
-                          categories.find((c) => c.id === article.category)
-                            ?.icon
-                        }
-                        <span className="ml-2">
+                    {/* Content Overlay */}
+                    <div className="home-page__hero-content">
+                      <div className="home-page__hero-content-wrapper">
+                        <Badge
+                          className={cn(
+                            "home-page__hero-category",
+                            categories.find((c) => c.id === article.category)
+                              ?.color || "bg-primary",
+                          )}
+                        >
                           {
                             categories.find((c) => c.id === article.category)
-                              ?.name
+                              ?.icon
                           }
-                        </span>
-                      </Badge>
-                      <h1 className="home-page__hero-title">{article.title}</h1>
-                      <p className="home-page__hero-excerpt">
-                        {article.excerpt}
-                      </p>
-                      <div className="home-page__hero-meta">
-                        <div className="home-page__hero-meta-left">
-                          <div className="home-page__hero-meta-item">
-                            <User className="h-5 w-5" />
-                            <span>{article.author}</span>
+                          <span className="ml-2">
+                            {
+                              categories.find((c) => c.id === article.category)
+                                ?.name
+                            }
+                          </span>
+                        </Badge>
+                        <h1 className="home-page__hero-title">
+                          {article.title}
+                        </h1>
+                        <p className="home-page__hero-excerpt">
+                          {article.excerpt}
+                        </p>
+                        <div className="home-page__hero-meta">
+                          <div className="home-page__hero-meta-left">
+                            <div className="home-page__hero-meta-item">
+                              <User className="h-5 w-5" />
+                              <span>{article.author}</span>
+                            </div>
+                            <div className="home-page__hero-meta-item">
+                              <Calendar className="h-5 w-5" />
+                              <span>{article.publishedAt}</span>
+                            </div>
+                            <div className="home-page__hero-meta-item">
+                              <Clock className="h-5 w-5" />
+                              <span>{article.readTime} min</span>
+                            </div>
                           </div>
-                          <div className="home-page__hero-meta-item">
-                            <Calendar className="h-5 w-5" />
-                            <span>{article.publishedAt}</span>
-                          </div>
-                          <div className="home-page__hero-meta-item">
-                            <Clock className="h-5 w-5" />
-                            <span>{article.readTime} min</span>
+                          <div className="home-page__hero-meta-right">
+                            <div className="home-page__hero-meta-item">
+                              <Eye className="h-5 w-5" />
+                              <span>{article.views.toLocaleString()}</span>
+                            </div>
+                            <div className="home-page__hero-meta-item">
+                              <Heart className="h-5 w-5" />
+                              <span>{article.likes}</span>
+                            </div>
                           </div>
                         </div>
-                        <div className="home-page__hero-meta-right">
-                          <div className="home-page__hero-meta-item">
-                            <Eye className="h-5 w-5" />
-                            <span>{article.views.toLocaleString()}</span>
-                          </div>
-                          <div className="home-page__hero-meta-item">
-                            <Heart className="h-5 w-5" />
-                            <span>{article.likes}</span>
+                        <Link to={`/articulo/${article.id}`}>
+                          <Button size="lg" className="text-lg px-8 py-3">
+                            Leer Artículo Completo
+                            <ArrowRight className="h-5 w-5 ml-2" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* Article Tags */}
+                    <div className="home-page__hero-tags">
+                      {article.tags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="bg-white/20 text-white border-white/30 backdrop-blur-sm"
+                        >
+                          #{tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Enhanced Navigation */}
+              <Button
+                variant="secondary"
+                size="icon"
+                className="home-page__hero-nav-btn home-page__hero-nav-btn--prev"
+                onClick={prevSlide}
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="home-page__hero-nav-btn home-page__hero-nav-btn--next"
+                onClick={nextSlide}
+              >
+                <ChevronRight className="h-6 w-6" />
+              </Button>
+
+              {/* Enhanced Slide Indicators */}
+              <div className="home-page__hero-indicators">
+                {featuredArticles.map((_, index) => (
+                  <button
+                    key={index}
+                    className={cn(
+                      "home-page__hero-indicator",
+                      index === currentSlide
+                        ? "home-page__hero-indicator--active"
+                        : "home-page__hero-indicator--inactive",
+                    )}
+                    onClick={() => setCurrentSlide(index)}
+                  />
+                ))}
+              </div>
+
+              {/* Carousel Progress Bar */}
+              <div className="home-page__hero-progress">
+                <Progress
+                  value={((currentSlide + 1) / featuredArticles.length) * 100}
+                  className="h-1 bg-white/20"
+                />
+              </div>
+            </div>
+
+            {/* Carousel Preview Sidebar */}
+            <div className="home-page__hero-preview">
+              <div className="home-page__hero-preview-content">
+                <div className="home-page__hero-preview-list">
+                  {featuredArticles.map((article, index) => (
+                    <div
+                      key={article.id}
+                      className={cn(
+                        "home-page__hero-preview-item",
+                        index === currentSlide &&
+                          "home-page__hero-preview-item--active",
+                      )}
+                      onClick={() => setCurrentSlide(index)}
+                    >
+                      <div className="home-page__hero-preview-image">
+                        <img
+                          src={article.imageUrl}
+                          alt={article.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="home-page__hero-preview-overlay">
+                          <div className="home-page__hero-preview-number">
+                            {String(index + 1).padStart(2, "0")}
                           </div>
                         </div>
                       </div>
-                      <Link to={`/articulo/${article.id}`}>
-                        <Button size="lg" className="text-lg px-8 py-3">
-                          Leer Artículo Completo
-                          <ArrowRight className="h-5 w-5 ml-2" />
-                        </Button>
-                      </Link>
+                      <div className="home-page__hero-preview-info">
+                        <Badge
+                          className={cn(
+                            "home-page__hero-preview-category",
+                            categories.find((c) => c.id === article.category)
+                              ?.color || "bg-primary",
+                          )}
+                        >
+                          {
+                            categories.find((c) => c.id === article.category)
+                              ?.icon
+                          }
+                        </Badge>
+                        <h4 className="home-page__hero-preview-item-title">
+                          {article.title}
+                        </h4>
+                        <div className="home-page__hero-preview-meta">
+                          <span className="home-page__hero-preview-author">
+                            {article.author}
+                          </span>
+                          <span className="home-page__hero-preview-time">
+                            {article.readTime} min
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Article Tags */}
-                  <div className="home-page__hero-tags">
-                    {article.tags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="secondary"
-                        className="bg-white/20 text-white border-white/30 backdrop-blur-sm"
-                      >
-                        #{tag}
-                      </Badge>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </div>
-            ))}
-
-            {/* Enhanced Navigation */}
-            <Button
-              variant="secondary"
-              size="icon"
-              className="home-page__hero-nav-btn home-page__hero-nav-btn--prev"
-              onClick={prevSlide}
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </Button>
-            <Button
-              variant="secondary"
-              size="icon"
-              className="home-page__hero-nav-btn home-page__hero-nav-btn--next"
-              onClick={nextSlide}
-            >
-              <ChevronRight className="h-6 w-6" />
-            </Button>
-
-            {/* Enhanced Slide Indicators */}
-            <div className="home-page__hero-indicators">
-              {featuredArticles.map((_, index) => (
-                <button
-                  key={index}
-                  className={cn(
-                    "home-page__hero-indicator",
-                    index === currentSlide
-                      ? "home-page__hero-indicator--active"
-                      : "home-page__hero-indicator--inactive",
-                  )}
-                  onClick={() => setCurrentSlide(index)}
-                />
-              ))}
-            </div>
-
-            {/* Carousel Progress Bar */}
-            <div className="home-page__hero-progress">
-              <Progress
-                value={((currentSlide + 1) / featuredArticles.length) * 100}
-                className="h-1 bg-white/20"
-              />
             </div>
           </div>
         </section>
