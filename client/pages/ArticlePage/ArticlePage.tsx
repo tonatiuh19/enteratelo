@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,184 @@ export default function ArticlePage() {
     .filter((a) => a.category === article.category && a.id !== article.id)
     .slice(0, 3);
 
+  // Utility function to scroll to top
+  const scrollToTop = (behavior: "smooth" | "instant" = "smooth") => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: behavior,
+    });
+  };
+
+  // Update document metadata dynamically
+  useEffect(() => {
+    // Scroll to top when article changes
+    // Use requestAnimationFrame to ensure DOM is ready
+    const scrollToTopDelayed = () => {
+      scrollToTop("smooth");
+    };
+
+    // Small delay to ensure the component has rendered
+    const timeoutId = setTimeout(() => {
+      requestAnimationFrame(scrollToTopDelayed);
+    }, 0);
+
+    document.title = `${article.title} | Entérate lo`;
+
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute(
+        "content",
+        article.metaDescription || article.excerpt,
+      );
+    } else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = article.metaDescription || article.excerpt;
+      document.head.appendChild(meta);
+    }
+
+    // Update meta keywords
+    if (article.metaKeywords) {
+      const metaKeywords = document.querySelector('meta[name="keywords"]');
+      if (metaKeywords) {
+        metaKeywords.setAttribute("content", article.metaKeywords.join(", "));
+      } else {
+        const meta = document.createElement("meta");
+        meta.name = "keywords";
+        meta.content = article.metaKeywords.join(", ");
+        document.head.appendChild(meta);
+      }
+    }
+
+    // Update Open Graph tags
+    const updateOGTag = (property: string, content: string) => {
+      let ogTag = document.querySelector(`meta[property="${property}"]`);
+      if (ogTag) {
+        ogTag.setAttribute("content", content);
+      } else {
+        const meta = document.createElement("meta");
+        meta.setAttribute("property", property);
+        meta.content = content;
+        document.head.appendChild(meta);
+      }
+    };
+
+    updateOGTag("og:title", article.title);
+    updateOGTag("og:description", article.metaDescription || article.excerpt);
+    updateOGTag("og:image", article.imageUrl);
+    updateOGTag("og:type", "article");
+    updateOGTag("og:url", window.location.href);
+
+    // Article specific OG tags
+    updateOGTag("article:author", article.author);
+    updateOGTag("article:published_time", article.publishedAt);
+    updateOGTag("article:section", category?.name || "");
+    if (article.tags) {
+      article.tags.forEach((tag) => {
+        const meta = document.createElement("meta");
+        meta.setAttribute("property", "article:tag");
+        meta.content = tag;
+        document.head.appendChild(meta);
+      });
+    }
+
+    // Twitter Card tags
+    const updateTwitterTag = (name: string, content: string) => {
+      let twitterTag = document.querySelector(`meta[name="${name}"]`);
+      if (twitterTag) {
+        twitterTag.setAttribute("content", content);
+      } else {
+        const meta = document.createElement("meta");
+        meta.name = name;
+        meta.content = content;
+        document.head.appendChild(meta);
+      }
+    };
+
+    updateTwitterTag("twitter:card", "summary_large_image");
+    updateTwitterTag("twitter:title", article.title);
+    updateTwitterTag(
+      "twitter:description",
+      article.metaDescription || article.excerpt,
+    );
+    updateTwitterTag("twitter:image", article.imageUrl);
+
+    // Add structured data (JSON-LD) for better SEO
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: article.title,
+      description: article.metaDescription || article.excerpt,
+      image: article.imageUrl,
+      author: {
+        "@type": "Person",
+        name: article.author,
+        description: article.authorBio,
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "Entérate lo",
+        logo: {
+          "@type": "ImageObject",
+          url: "/favicon.ico",
+        },
+      },
+      datePublished: article.publishedAt,
+      dateModified: article.publishedAt,
+      mainEntityOfPage: {
+        "@type": "WebPage",
+        "@id": window.location.href,
+      },
+      keywords: article.metaKeywords?.join(", ") || article.tags.join(", "),
+      articleSection: category?.name,
+      wordCount: article.content.replace(/<[^>]*>/g, "").split(" ").length,
+      timeRequired: `PT${article.readTime}M`,
+      interactionStatistic: [
+        {
+          "@type": "InteractionCounter",
+          interactionType: "https://schema.org/LikeAction",
+          userInteractionCount: article.likes,
+        },
+        {
+          "@type": "InteractionCounter",
+          interactionType: "https://schema.org/ViewAction",
+          userInteractionCount: article.views,
+        },
+      ],
+    };
+
+    // Remove existing structured data
+    const existingScript = document.querySelector(
+      'script[type="application/ld+json"]',
+    );
+    if (existingScript) {
+      document.head.removeChild(existingScript);
+    }
+
+    // Add new structured data
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify(structuredData);
+    document.head.appendChild(script);
+
+    // Cleanup function to reset title when component unmounts
+    return () => {
+      // Clear the scroll timeout
+      clearTimeout(timeoutId);
+
+      document.title = "Entérate lo";
+      // Clean up structured data
+      const scriptToRemove = document.querySelector(
+        'script[type="application/ld+json"]',
+      );
+      if (scriptToRemove) {
+        document.head.removeChild(scriptToRemove);
+      }
+    };
+  }, [article, category]);
+
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (newComment.trim()) {
@@ -51,52 +229,6 @@ export default function ArticlePage() {
       setNewComment("");
     }
   };
-
-  const articleContent = `
-    <p>En una fría noche de noviembre en el Santiago Bernabéu, más de 80,000 espectadores fueron testigos de algo mucho más grande que un clásico entre Real Madrid y Barcelona. Era una ventana al futuro del deporte. Mientras Messi y Mbappé se enfrentaban sobre el césped, la tecnología que experimentan el futuro del deporte. Mientras Messi y Mbappé se enfrentaban sobre el césped, la verdadera revolución sucedía en las gradas, en los móviles de los aficionados y en los centros de datos que alimentan la nueva era del entretenimiento deportivo.</p>
-    
-    <h2>📱 Lo Que Revolucionó en este Artículo</h2>
-    
-    <ul>
-      <li>🚀 <strong>Tecnología en los estadios</strong> revolucionó las experiencias de entretenimiento del aficionado</li>
-      <li>🎯 <strong>Los aficionados modernos</strong> que conocen las estadísticas más avanzadas</li>
-      <li>📊 <strong>Ejemplos reales de implementación</strong> en venues emblemáticos</li>
-      <li>🔮 <strong>El futuro de los estadios inteligentes</strong> y las nuevas experiencias</li>
-    </ul>
-    
-    <h2>🚀 5G: La Infraestructura que lo Hace Posible</h2>
-    
-    <p>La verdadera revolución comenzó con el despliegue masivo de redes 5G en estadios deportivos. Con velocidades de hasta 10 gigabits por segundo, la latencia se redujo a menos de 1 milisegundo, lo cual permite una interacción casi instantánea entre dispositivos. Con velocidades que alcanzan los <strong>10 Gbps</strong> y latencias menores a <strong>1ms</strong>, se abre un mundo de posibilidades:</p>
-    
-    <blockquote>
-      <p><strong>50% de los espectadores</strong> utilizan actualmente aplicaciones interactivas durante eventos deportivos, y se espera que esta cifra alcance el <strong>85% en 2025</strong>.</p>
-    </blockquote>
-
-    <h3>Capacidades Revolucionarias del 5G en Estadios:</h3>
-    
-    <ul>
-      <li><strong>Realidad Aumentada en Tiempo Real:</strong> Los espectadores pueden ver superposiciones digitales con información detallada de jugadores, estadísticas en vivo y repeticiones desde múltiples ángulos directamente en sus dispositivos.</li>
-      <li><strong>Interactividad Social Masiva:</strong> Participación en encuestas, juegos y experiencias colaborativas con otros espectadores sin comprometer la conectividad.</li>
-      <li><strong>Streaming Multi-Ángulo:</strong> Acceso a 6 ángulos diferentes de cámara desde dispositivos personales sin buffering.</li>
-      <li><strong>Traducción Instantánea:</strong> Comentarios en tiempo real en más de 40 idiomas.</li>
-    </ul>
-
-    <h2>🧠 Inteligencia Artificial: El Cerebro del Estadio Inteligente</h2>
-    
-    <p>Los sistemas de IA procesan más de <strong>2.5 millones de puntos de datos por partido</strong>, desde la velocidad de cada jugador hasta patrones de movimiento de la multitud, creando una matriz de experiencias personalizadas. Esta tecnología está redefiniendo la manera en que experimentamos los deportes.</p>
-    
-    <p>El <strong>57% de los estadios</strong> más avanzados ya utilizan algoritmos de machine learning que pueden predecir con un <strong>78% de precisión</strong> cuál será la siguiente jugada más importante, mejorando significativamente la experiencia del espectador.</p>
-
-    <blockquote>
-      <p>"No estamos simplemente digitalizando el deporte; estamos creando una nueva dimensión de entretenimiento donde cada aficionado se convierte en analista, comentarista y protagonista de su propia experiencia." - Dr. Elena Martín, MIT Sports Technology Lab</p>
-    </blockquote>
-
-    <h2>🌟 El Futuro es Ahora</h2>
-    
-    <p>Varios estadios pioneros ya han implementado estas tecnologías con resultados impresionantes. El aumento en la satisfacción de los espectadores y el engagement durante los eventos ha sido notable.</p>
-    
-    <p>La próxima fase incluirá la integración de inteligencia artificial para predicciones más precisas y experiencias aún más personalizadas. El deporte del futuro será más interactivo, más inmersivo y más emocionante que nunca.</p>
-  `;
 
   return (
     <Layout showBreakingNews={false}>
@@ -198,9 +330,7 @@ export default function ArticlePage() {
               {/* Image Caption */}
               <div className="article-page__image-caption">
                 <p>
-                  En una fría noche de noviembre en el Santiago Bernabéu, más de
-                  80,000 espectadores fueron testigos de algo mucho más grande
-                  que un clásico entre Real Madrid y Barcelona.
+                  {article.imageCaption || "Imagen ilustrativa del artículo"}
                 </p>
               </div>
             </div>
@@ -211,7 +341,7 @@ export default function ArticlePage() {
               <div className="article-page__main-content">
                 <div
                   className="article-page__content"
-                  dangerouslySetInnerHTML={{ __html: articleContent }}
+                  dangerouslySetInnerHTML={{ __html: article.content }}
                 />
 
                 <div className="article-page__tags">
@@ -316,7 +446,7 @@ export default function ArticlePage() {
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-12 w-12">
                         <AvatarFallback className="text-lg">
-                          {article.author.charAt(0)}
+                          {article.authorAvatar || article.author.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
@@ -329,8 +459,8 @@ export default function ArticlePage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Especialista en tecnología deportiva y innovación en
-                      estadios.
+                      {article.authorBio ||
+                        "Periodista especializado en la cobertura de temas de actualidad e interés general."}
                     </p>
                     <Button variant="outline" size="sm" className="w-full">
                       Seguir autor
