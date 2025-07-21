@@ -42,6 +42,7 @@ import {
   liveScores,
 } from "@/services/data.service";
 import { Layout } from "@/components/Layout/Layout";
+import { LatestNews } from "@/components/LatestNews/LatestNews";
 import "./HomePage.css";
 
 export default function HomePage() {
@@ -691,71 +692,7 @@ export default function HomePage() {
             {/* Enhanced Sidebar */}
             <div className="home-page__sidebar">
               {/* Lo Último */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center space-x-2">
-                    <Newspaper className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-bold">Lo Último</h3>
-                  </div>
-                  <Badge variant="secondary" className="text-xs animate-pulse">
-                    Actualizado hace 5 min
-                  </Badge>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {latestArticles.slice(0, 5).map((article, index) => (
-                    <div
-                      key={article.id}
-                      className="flex space-x-3 p-2 hover:bg-muted/50 rounded-lg transition-colors cursor-pointer group"
-                    >
-                      <div className="flex-shrink-0 w-6 text-center">
-                        <span className="text-xs font-mono text-muted-foreground">
-                          {String(index + 1).padStart(2, "0")}
-                        </span>
-                      </div>
-
-                      <div className="flex-shrink-0 w-12 h-10 overflow-hidden rounded">
-                        <img
-                          src={article.imageUrl}
-                          alt={article.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-xs line-clamp-2 group-hover:text-primary transition-colors mb-1">
-                          {article.title}
-                        </h4>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <span
-                            className={cn(
-                              "w-1.5 h-1.5 rounded-full",
-                              categories.find((c) => c.id === article.category)
-                                ?.color || "bg-primary",
-                            )}
-                          ></span>
-                          <span className="truncate">
-                            {
-                              categories.find((c) => c.id === article.category)
-                                ?.name
-                            }
-                          </span>
-                          <span>•</span>
-                          <span>Hace {index + 1}h</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="pt-2 border-t">
-                    <Link
-                      to="/todas-las-noticias"
-                      className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors text-xs font-medium"
-                    >
-                      <span>Ver todas las noticias</span>
-                      <ArrowRight className="h-3 w-3" />
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+              <LatestNews maxArticles={5} showUpdateBadge={true} />
 
               {/* Interactive Poll */}
               <Card>

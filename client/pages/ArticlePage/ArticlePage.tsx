@@ -22,7 +22,6 @@ import {
   ChevronLeft,
   Send,
   ThumbsUp,
-  TrendingUp,
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,6 +31,7 @@ import {
   getCommentsForArticle,
 } from "@/services/data.service";
 import { Layout } from "@/components/Layout/Layout";
+import { LatestNews } from "@/components/LatestNews/LatestNews";
 import "./ArticlePage.css";
 
 export default function ArticlePage() {
@@ -479,6 +479,9 @@ export default function ArticlePage() {
                     </Button>
                   </CardContent>
                 </Card>
+
+                {/* Lo Último */}
+                <LatestNews maxArticles={5} showUpdateBadge={true} />
 
                 {/* Related Articles */}
                 <Card className="article-page__related-card">

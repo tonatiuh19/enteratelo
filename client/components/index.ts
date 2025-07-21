@@ -5,3 +5,4 @@ export { Footer } from "./Footer/Footer";
 
 // Feature Components
 export { ArticleCard } from "./ArticleCard/ArticleCard";
+export { LatestNews } from "./LatestNews/LatestNews";
