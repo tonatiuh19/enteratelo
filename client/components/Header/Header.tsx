@@ -4,44 +4,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Menu } from "lucide-react";
 import { categories } from "@/services/data.service";
+import "./Header.css";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-8">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">
-                  E
-                </span>
+    <header className="header">
+      <div className="header__container">
+        <div className="header__content">
+          <div className="header__left">
+            <Link to="/" className="header__logo">
+              <div className="header__logo-icon">
+                <span className="header__logo-text">E</span>
               </div>
-              <span className="text-xl font-bold text-foreground">
-                Entérate.lo
-              </span>
+              <span className="header__logo-title">Entérate.lo</span>
             </Link>
 
-            <nav className="hidden lg:flex space-x-6">
+            <nav className="header__nav">
               {categories.map((category) => (
                 <Link
                   key={category.id}
                   to={`/categoria/${category.id}`}
-                  className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+                  className="header__nav-link"
                 >
-                  <span className="mr-1">{category.icon}</span>
+                  <span className="header__nav-link-icon">{category.icon}</span>
                   {category.name}
                 </Link>
               ))}
             </nav>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="hidden md:flex items-center space-x-2">
+          <div className="header__right">
+            <div className="header__search">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar artículos..." className="w-48" />
+              <Input
+                placeholder="Buscar artículos..."
+                className="header__search-input"
+              />
             </div>
             <Button
               variant="ghost"
@@ -55,22 +55,25 @@ export function Header() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 space-y-2">
+          <div className="header__mobile-menu">
             {categories.map((category) => (
               <Link
                 key={category.id}
                 to={`/categoria/${category.id}`}
-                className="block py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+                className="header__mobile-nav-link"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <span className="mr-2">{category.icon}</span>
+                <span className="header__mobile-nav-icon">{category.icon}</span>
                 {category.name}
               </Link>
             ))}
-            <div className="pt-2">
-              <div className="flex items-center space-x-2">
+            <div className="header__mobile-search">
+              <div className="header__mobile-search-container">
                 <Search className="h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar artículos..." className="flex-1" />
+                <Input
+                  placeholder="Buscar artículos..."
+                  className="header__mobile-search-input"
+                />
               </div>
             </div>
           </div>

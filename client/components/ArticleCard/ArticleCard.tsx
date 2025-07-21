@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Clock, Eye, Heart, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Article } from "@/services/data.service";
+import "./ArticleCard.css";
 
 interface ArticleCardProps {
   article: Article;
@@ -18,37 +19,34 @@ export function ArticleCard({
   className,
 }: ArticleCardProps) {
   return (
-    <Card
-      className={cn(
-        "group hover:shadow-lg transition-all duration-300",
-        className,
-      )}
-    >
-      <div className="relative overflow-hidden">
+    <Card className={cn("article-card group", className)}>
+      <div className="article-card__image-container">
         <img
           src={article.imageUrl}
           alt={article.title}
           className={cn(
-            "w-full object-cover transition-transform duration-300 group-hover:scale-105",
-            featured ? "h-64" : "h-48",
+            "article-card__image",
+            featured
+              ? "article-card__image--featured"
+              : "article-card__image--regular",
           )}
         />
         {article.trending && (
-          <Badge className="absolute top-3 right-3 bg-red-500 shadow-lg">
+          <Badge className="article-card__badge article-card__badge--trending">
             <span className="animate-pulse">🔥</span>
             Trending
           </Badge>
         )}
         {article.featured && (
-          <Badge className="absolute top-3 left-3 bg-yellow-500 text-yellow-900 shadow-lg">
+          <Badge className="article-card__badge article-card__badge--featured">
             <span>⭐</span>
             Destacado
           </Badge>
         )}
       </div>
 
-      <CardHeader className="space-y-2">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <CardHeader className="article-card__header">
+        <div className="article-card__date">
           <Calendar className="h-4 w-4" />
           {new Date(article.publishedAt).toLocaleDateString("es-ES", {
             year: "numeric",
@@ -59,45 +57,45 @@ export function ArticleCard({
 
         <Link
           to={`/articulo/${article.id}`}
-          className="group-hover:text-primary transition-colors"
+          className="article-card__title-link"
         >
           <h3
             className={cn(
-              "font-bold leading-tight line-clamp-2",
-              featured ? "text-xl" : "text-lg",
+              "article-card__title",
+              featured
+                ? "article-card__title--featured"
+                : "article-card__title--regular",
             )}
           >
             {article.title}
           </h3>
         </Link>
 
-        <p className="text-muted-foreground text-sm line-clamp-2">
-          {article.excerpt}
-        </p>
+        <p className="article-card__excerpt">{article.excerpt}</p>
       </CardHeader>
 
-      <CardContent className="pt-0">
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
+      <CardContent className="article-card__content">
+        <div className="article-card__meta">
+          <div className="article-card__stats">
+            <div className="article-card__stat">
               <Clock className="h-4 w-4" />
               {article.readTime} min
             </div>
-            <div className="flex items-center gap-1">
+            <div className="article-card__stat">
               <Eye className="h-4 w-4" />
               {article.views.toLocaleString()}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="article-card__stat">
               <Heart className="h-4 w-4" />
               {article.likes.toLocaleString()}
             </div>
           </div>
-          <span className="font-medium">{article.author}</span>
+          <span className="article-card__author">{article.author}</span>
         </div>
 
-        <div className="flex flex-wrap gap-1 mt-3">
+        <div className="article-card__tags">
           {article.tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="outline" className="text-xs">
+            <Badge key={tag} variant="outline" className="article-card__tag">
               {tag}
             </Badge>
           ))}

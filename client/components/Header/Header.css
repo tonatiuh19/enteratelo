@@ -1,0 +1,155 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: hsl(var(--background) / 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+@supports (backdrop-filter: blur(8px)) {
+  .header {
+    background-color: hsl(var(--background) / 0.6);
+  }
+}
+
+.header__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.header__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4rem;
+}
+
+.header__left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.header__logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.header__logo-icon {
+  width: 2rem;
+  height: 2rem;
+  background-color: hsl(var(--primary));
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header__logo-text {
+  color: hsl(var(--primary-foreground));
+  font-weight: bold;
+  font-size: 1.125rem;
+}
+
+.header__logo-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: hsl(var(--foreground));
+}
+
+.header__nav {
+  display: none;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .header__nav {
+    display: flex;
+  }
+}
+
+.header__nav-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--foreground) / 0.8);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.header__nav-link:hover {
+  color: hsl(var(--foreground));
+}
+
+.header__nav-link-icon {
+  margin-right: 0.25rem;
+}
+
+.header__right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header__search {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .header__search {
+    display: flex;
+  }
+}
+
+.header__search-input {
+  width: 12rem;
+}
+
+.header__mobile-menu {
+  display: block;
+  padding: 1rem 0;
+  gap: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .header__mobile-menu {
+    display: none;
+  }
+}
+
+.header__mobile-nav-link {
+  display: block;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: hsl(var(--foreground) / 0.8);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.header__mobile-nav-link:hover {
+  color: hsl(var(--foreground));
+}
+
+.header__mobile-nav-icon {
+  margin-right: 0.5rem;
+}
+
+.header__mobile-search {
+  padding-top: 0.5rem;
+}
+
+.header__mobile-search-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header__mobile-search-input {
+  flex: 1;
+}
