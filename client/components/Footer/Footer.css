@@ -137,3 +137,193 @@
 .footer__bottom-link:hover {
   color: hsl(var(--foreground));
 }
+
+/* Author Portal Button - Prominent placement */
+.footer__author-portal {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid hsl(var(--border));
+}
+
+.footer__author-btn {
+  width: 100%;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary) / 0.8) 100%
+  );
+  color: hsl(var(--primary-foreground));
+  border: none;
+  font-weight: 600;
+  height: 2.75rem;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.3);
+}
+
+.footer__author-btn:hover {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary) / 0.9) 0%,
+    hsl(var(--primary) / 0.7) 100%
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px hsl(var(--primary) / 0.4);
+}
+
+.footer__author-btn:active {
+  transform: translateY(0);
+}
+
+/* Author info in newsletter section */
+.footer__author-info {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid hsl(var(--border) / 0.5);
+}
+
+.footer__author-info-text {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.footer__author-link {
+  color: hsl(var(--primary));
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer__author-link:hover {
+  color: hsl(var(--primary) / 0.8);
+  text-decoration: underline;
+}
+
+/* User Section Styles */
+.footer__user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.footer__user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+}
+
+.footer__user-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.footer__user-avatar-fallback {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.footer__user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.footer__user-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer__user-email {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer__user-role {
+  font-size: 0.75rem;
+  color: hsl(var(--primary));
+  margin: 0;
+  font-weight: 500;
+}
+
+.footer__user-menu-btn {
+  width: 100%;
+  justify-content: flex-start;
+  height: 2.25rem;
+  font-size: 0.875rem;
+}
+
+.footer__user-menu {
+  min-width: 200px;
+}
+
+.footer__logout-btn {
+  color: hsl(var(--destructive));
+}
+
+.footer__logout-btn:hover {
+  background: hsl(var(--destructive) / 0.1);
+}
+
+/* Auth Section Styles */
+.footer__auth-section {
+  margin-top: 1rem;
+}
+
+.footer__auth-separator {
+  margin: 0.75rem 0;
+}
+
+.footer__auth-text {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+  margin: 0 0 0.75rem 0;
+}
+
+.footer__login-btn {
+  height: 2.25rem;
+  font-size: 0.875rem;
+  justify-content: center;
+}
+
+.footer__login-btn:hover {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+
+/* Responsive adjustments for user section */
+@media (max-width: 768px) {
+  .footer__user-profile {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .footer__user-details {
+    text-align: center;
+  }
+
+  .footer__user-name,
+  .footer__user-email {
+    white-space: normal;
+    text-overflow: unset;
+  }
+}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Mail, Twitter, Facebook, Instagram } from "lucide-react";
+import { Mail, Twitter, Facebook, Instagram, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -80,7 +80,7 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Newsletter */}
+          {/* Newsletter Section */}
           <div className="footer__section">
             <h3 className="footer__section-title">Newsletter</h3>
             <p className="footer__newsletter-description">
@@ -114,6 +114,9 @@ export function Footer() {
             </Link>
             <Link to="/privacidad" className="footer__bottom-link">
               Política de Privacidad
+            </Link>
+            <Link to="/login" className="footer__bottom-link">
+              Portal de Autores
             </Link>
           </div>
         </div>

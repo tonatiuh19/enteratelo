@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Menu } from "lucide-react";
+import { Search, Menu, PenTool } from "lucide-react";
 import { categories } from "@/services/data.service";
 import "./Header.css";
 
@@ -43,6 +43,19 @@ export function Header() {
                 className="header__search-input"
               />
             </div>
+
+            {/* Author Portal Link */}
+            <Link to="/login" className="header__author-link">
+              <Button
+                variant="outline"
+                size="sm"
+                className="header__author-btn"
+              >
+                <PenTool className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Autores</span>
+              </Button>
+            </Link>
+
             <Button
               variant="ghost"
               size="icon"
