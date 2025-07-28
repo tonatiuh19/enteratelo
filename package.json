@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
+    "axios": "^1.11.0",
     "formik": "^2.4.6",
     "react-redux": "^9.2.0",
     "yup": "^1.6.1",

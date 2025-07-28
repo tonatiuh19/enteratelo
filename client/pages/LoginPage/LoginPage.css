@@ -246,6 +246,23 @@
   margin-bottom: 1.5rem;
 }
 
+.login-page__success {
+  margin-bottom: 1.5rem;
+  border-color: hsl(142 76% 36%);
+  background-color: hsl(143 85% 96%);
+  color: hsl(140 100% 27%);
+}
+
+.login-page__success-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.login-page__back-btn {
+  min-width: 200px;
+}
+
 .login-page__form {
   display: flex;
   flex-direction: column;

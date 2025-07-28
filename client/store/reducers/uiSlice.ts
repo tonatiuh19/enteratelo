@@ -4,6 +4,7 @@ import {
   showNotification,
   loadThemePreference,
   saveThemePreference,
+  setGlobalLoading,
 } from "../actions/uiActions";
 
 const initialState: UIState = {
@@ -53,6 +54,9 @@ const uiSlice = createSlice({
       })
       .addCase(saveThemePreference.fulfilled, (state, action) => {
         state.theme = action.payload;
+      })
+      .addCase(setGlobalLoading.fulfilled, (state, action) => {
+        state.isLoading = action.payload;
       });
   },
 });

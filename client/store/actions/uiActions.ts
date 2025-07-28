@@ -18,8 +18,8 @@ export const showNotification = createAsyncThunk(
 export const loadThemePreference = createAsyncThunk(
   "ui/loadThemePreference",
   async () => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    return savedTheme || "light";
+    const savedTheme = localStorage.getItem("theme");
+    return (savedTheme as "light" | "dark") || "light";
   },
 );
 
@@ -28,5 +28,13 @@ export const saveThemePreference = createAsyncThunk(
   async (theme: "light" | "dark") => {
     localStorage.setItem("theme", theme);
     return theme;
+  },
+);
+
+// Global loading action for app-wide loading states
+export const setGlobalLoading = createAsyncThunk(
+  "ui/setGlobalLoading",
+  async (isLoading: boolean) => {
+    return isLoading;
   },
 );

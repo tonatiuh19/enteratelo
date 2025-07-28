@@ -18,6 +18,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
 
+    /* Layout variables */
+    --header-height: 64px;
+
     --primary: 210 100% 50%;
     --primary-foreground: 0 0% 100%;
 

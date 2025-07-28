@@ -1,0 +1,91 @@
+/* Loading Progress Bar */
+.loading-progress-bar {
+  position: fixed;
+  top: var(--header-height, 64px); /* Position after header */
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.loading-progress-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 50%, #3b82f6 100%);
+  width: 100%;
+  animation: loading-progress 2s ease-in-out infinite;
+  transform-origin: left;
+}
+
+@keyframes loading-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Alternative indeterminate progress animation */
+.loading-progress-bar__fill--pulse {
+  animation: loading-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes loading-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scaleX(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+/* Dark theme support */
+[data-theme="dark"] .loading-progress-bar {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .loading-progress-bar__fill {
+  background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 50%, #60a5fa 100%);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .loading-progress-bar {
+    height: 2px;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .loading-progress-bar {
+    background-color: #000;
+  }
+
+  .loading-progress-bar__fill {
+    background: #0066cc;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .loading-progress-bar__fill {
+    animation: loading-progress-reduced 3s linear infinite;
+  }
+
+  @keyframes loading-progress-reduced {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+}

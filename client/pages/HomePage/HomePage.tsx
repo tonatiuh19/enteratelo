@@ -190,25 +190,6 @@ export default function HomePage() {
                   </div>
                 </div>
               ))}
-
-              {/* Enhanced Navigation */}
-              <Button
-                variant="secondary"
-                size="icon"
-                className="home-page__hero-nav-btn home-page__hero-nav-btn--prev"
-                onClick={prevSlide}
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </Button>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="home-page__hero-nav-btn home-page__hero-nav-btn--next"
-                onClick={nextSlide}
-              >
-                <ChevronRight className="h-6 w-6" />
-              </Button>
-
               {/* Enhanced Slide Indicators */}
               <div className="home-page__hero-indicators">
                 {featuredArticles.map((_, index) => (

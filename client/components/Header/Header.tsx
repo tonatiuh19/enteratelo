@@ -44,18 +44,6 @@ export function Header() {
               />
             </div>
 
-            {/* Author Portal Link */}
-            <Link to="/login" className="header__author-link">
-              <Button
-                variant="outline"
-                size="sm"
-                className="header__author-btn"
-              >
-                <PenTool className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Autores</span>
-              </Button>
-            </Link>
-
             <Button
               variant="ghost"
               size="icon"

@@ -1,44 +1,43 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 import { User } from "../state/types";
 
 export interface LoginCredentials {
   email: string;
-  password: string;
 }
 
 export interface RegisterData {
   name: string;
   email: string;
-  password: string;
-  specialty: string;
   bio: string;
 }
 
-// Async thunks (effects)
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Check localStorage for existing user (demo purposes)
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        if (user.email === credentials.email) {
-          const updatedUser = {
-            ...user,
-            loginTime: new Date().toISOString(),
-          };
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-          return updatedUser as User;
-        }
+      // Check localStorage for existing user ID
+      const storedUserId = localStorage.getItem("userId");
+      if (storedUserId) {
+        // In a real app, you'd fetch user data from API using the ID
+        // For demo purposes, create user object
+        const demoUser: User = {
+          id: storedUserId,
+          name: "Autor Demo",
+          email: credentials.email,
+          role: "author",
+          specialty: "journalism",
+          bio: "Periodista experimentado con pasión por la investigación.",
+          status: "active",
+          loginTime: new Date().toISOString(),
+        };
+        return demoUser;
       }
 
-      // Create demo user if not found
+      // If no user ID found, create demo user
+      const userId = Math.random().toString(36).substr(2, 9);
       const demoUser: User = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: userId,
         name: "Autor Demo",
         email: credentials.email,
         role: "author",
@@ -48,7 +47,7 @@ export const loginUser = createAsyncThunk(
         loginTime: new Date().toISOString(),
       };
 
-      localStorage.setItem("user", JSON.stringify(demoUser));
+      localStorage.setItem("userId", userId);
       return demoUser;
     } catch (error: any) {
       return rejectWithValue(error.message || "Error al iniciar sesión");
@@ -60,23 +59,35 @@ export const registerUser = createAsyncThunk(
   "auth/registerUser",
   async (userData: RegisterData, { rejectWithValue }) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Make API call to registerAuthor.php
+      const response = await axios.post(
+        "https://garbrix.com/enteratelo/api/registerAuthor.php",
+        {
+          name: userData.name,
+          email: userData.email,
+          bio: userData.bio,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
 
-      const newUser: User = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: userData.name,
-        email: userData.email,
-        role: "author",
-        specialty: userData.specialty,
-        bio: userData.bio,
-        status: "pending_review", // New authors need approval
-        loginTime: new Date().toISOString(),
-      };
-
-      localStorage.setItem("user", JSON.stringify(newUser));
-      return newUser;
+      // If API call is successful, just return status
+      if (response.data) {
+        return {
+          success: true,
+          message: response.data.message || "Registro exitoso",
+          status: "pending_review",
+        };
+      } else {
+        throw new Error(response.data?.message || "Error en el registro");
+      }
     } catch (error: any) {
+      if (error.response?.data?.message) {
+        return rejectWithValue(error.response.data.message);
+      }
       return rejectWithValue(error.message || "Error al registrar usuario");
     }
   },
@@ -86,8 +97,8 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
-      // Clear localStorage
-      localStorage.removeItem("user");
+      // Clear localStorage - only remove userId
+      localStorage.removeItem("userId");
       // In a real app, you'd make an API call to invalidate the session
       return;
     } catch (error: any) {
@@ -100,9 +111,21 @@ export const loadStoredUser = createAsyncThunk(
   "auth/loadStoredUser",
   async (_, { rejectWithValue }) => {
     try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        return JSON.parse(storedUser) as User;
+      const storedUserId = localStorage.getItem("userId");
+      if (storedUserId) {
+        // In a real app, you'd fetch user data from API using the stored ID
+        // For demo purposes, create a user object with the stored ID
+        const demoUser: User = {
+          id: storedUserId,
+          name: "Usuario Almacenado",
+          email: "stored@example.com",
+          role: "author",
+          specialty: "journalism",
+          bio: "Usuario con sesión guardada.",
+          status: "active",
+          loginTime: new Date().toISOString(),
+        };
+        return demoUser;
       }
       return null;
     } catch (error: any) {
@@ -118,12 +141,21 @@ export const updateUserProfile = createAsyncThunk(
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        const updatedUser = { ...user, ...userData };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        return updatedUser as User;
+      const storedUserId = localStorage.getItem("userId");
+      if (storedUserId) {
+        // In a real app, you'd update user data via API using the stored ID
+        // For demo purposes, create updated user object
+        const updatedUser: User = {
+          id: storedUserId,
+          name: userData.name || "Usuario Actualizado",
+          email: userData.email || "updated@example.com",
+          role: userData.role || "author",
+          specialty: userData.specialty || "journalism",
+          bio: userData.bio || "Biografía actualizada.",
+          status: userData.status || "active",
+          loginTime: new Date().toISOString(),
+        };
+        return updatedUser;
       }
 
       throw new Error("Usuario no encontrado");

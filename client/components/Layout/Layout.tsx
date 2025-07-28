@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Header } from "../Header/Header";
 import { Footer } from "../Footer/Footer";
+import { LoadingProgressBar } from "../LoadingProgressBar/LoadingProgressBar";
 import { Zap } from "lucide-react";
 import { breakingNews } from "@/services/data.service";
 import "./Layout.css";
@@ -47,6 +48,9 @@ export function Layout({ children, showBreakingNews = true }: LayoutProps) {
 
       {/* Header */}
       <Header />
+
+      {/* Loading Progress Bar */}
+      <LoadingProgressBar />
 
       {/* Main Content */}
       <main>{children}</main>
