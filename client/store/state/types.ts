@@ -1,11 +1,27 @@
 // Auth State
+export const DOMAIN = "https://garbrix.com/enteratelo/api";
+
 export interface User {
   id: string;
+  user_id?: number;
   name: string;
+  slug?: string;
   email: string;
-  role: "author" | "admin" | "reader";
-  specialty?: string;
   bio?: string;
+  avatar_url?: string;
+  social_twitter?: string;
+  social_instagram?: string;
+  social_linkedin?: string;
+  social_facebook?: string;
+  position?: string;
+  specialization?: string;
+  article_count?: number;
+  total_views?: number;
+  total_likes?: number;
+  meta_title?: string;
+  meta_description?: string;
+  created_at?: string;
+  role: "author" | "admin" | "reader";
   status: "active" | "pending_review" | "suspended";
   loginTime?: string;
 }
@@ -15,6 +31,8 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  codeSent: boolean;
+  pendingEmail: string | null;
 }
 
 // Articles State

@@ -4,12 +4,18 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { loginUser, registerUser } from "@/store/actions/authActions";
+import {
+  loginUser,
+  registerUser,
+  validateSessionCode,
+} from "@/store/actions/authActions";
 import {
   selectAuthLoading,
   selectAuthError,
   selectIsAuthenticated,
   selectUser,
+  selectCodeSent,
+  selectPendingEmail,
 } from "@/store/selectors/authSelectors";
 import { AuthActions } from "@/store/reducers";
 import { Button } from "@/components/ui/button";
@@ -60,11 +66,18 @@ const registerSchema = Yup.object().shape({
     .required("Una breve biografía es requerida"),
 });
 
+const verifyCodeSchema = Yup.object().shape({
+  code: Yup.string()
+    .required("El código de verificación es requerido")
+    .length(6, "El código debe tener 6 caracteres"),
+});
+
 export default function LoginPage() {
   const [formMode, setFormMode] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -72,35 +85,53 @@ export default function LoginPage() {
   const error = useAppSelector(selectAuthError);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
+  const codeSent = useAppSelector(selectCodeSent);
+  const pendingEmail = useAppSelector(selectPendingEmail);
 
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Redirect if authenticated
+  // Redirect if authenticated - check both immediately and when auth state changes
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
+    if (isAuthenticated && !isLoading) {
+      navigate("/author/dashboard", { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   // Clear errors when switching form modes
   useEffect(() => {
     if (error) {
       dispatch(AuthActions.clearError());
     }
-  }, [formMode, dispatch, error]);
+  }, [formMode, dispatch]);
 
   // Clear registration success when switching modes
   useEffect(() => {
     setRegistrationSuccess(false);
   }, [formMode]);
 
+  // Early return if user is authenticated - show loading or redirect
+  if (isAuthenticated && !isLoading) {
+    return (
+      <Layout showBreakingNews={false}>
+        <div className="login-page">
+          <div className="login-page__container">
+            <div className="login-page__loading-redirect">
+              <p>Ya estás autenticado. Redirigiendo al dashboard...</p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   const initialValues = {
     name: "",
     email: "",
     bio: "",
+    code: "",
   };
 
   const handleSubmit = async (
@@ -110,11 +141,19 @@ export default function LoginPage() {
     try {
       dispatch(setGlobalLoading(true));
 
-      if (formMode === "login") {
-        // Dispatch login action
+      if (formMode === "login" && !codeSent) {
+        // First step: Send verification code
         await dispatch(loginUser({ email: values.email }));
+      } else if (formMode === "login" && codeSent) {
+        // Second step: Verify code
+        await dispatch(
+          validateSessionCode({
+            email: pendingEmail!,
+            code: values.code,
+          }),
+        );
       } else {
-        // Dispatch register action with API call to registerAuthor.php
+        // Register mode
         const result = await dispatch(
           registerUser({
             name: values.name,
@@ -228,7 +267,11 @@ export default function LoginPage() {
                 <Formik
                   initialValues={initialValues}
                   validationSchema={
-                    formMode === "login" ? loginSchema : registerSchema
+                    formMode === "login" && codeSent
+                      ? verifyCodeSchema
+                      : formMode === "login"
+                        ? loginSchema
+                        : registerSchema
                   }
                   onSubmit={handleSubmit}
                   enableReinitialize
@@ -253,34 +296,80 @@ export default function LoginPage() {
                       )}
 
                       {registrationSuccess && (
-                        <Alert
-                          className="login-page__success"
-                          variant="default"
-                        >
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <AlertDescription>
-                            <strong>¡Registro enviado exitosamente!</strong>
-                            <br />
-                            Tu solicitud ha sido enviada. Te notificaremos por
-                            email cuando tu perfil esté activo.
-                          </AlertDescription>
-                        </Alert>
-                      )}
-
-                      {registrationSuccess && (
-                        <div className="login-page__success-actions">
-                          <Button
-                            onClick={() => navigate("/")}
-                            className="login-page__back-btn"
-                            variant="outline"
+                        <>
+                          <Alert
+                            className="login-page__success"
+                            variant="default"
                           >
-                            Volver al Inicio
-                          </Button>
-                        </div>
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <AlertDescription>
+                              <strong>¡Registro enviado exitosamente!</strong>
+                              <br />
+                              Tu solicitud ha sido enviada. Te notificaremos por
+                              email cuando tu perfil esté activo.
+                            </AlertDescription>
+                          </Alert>
+
+                          <div className="login-page__success-actions">
+                            <Button
+                              onClick={() => navigate("/")}
+                              className="login-page__back-btn"
+                              variant="outline"
+                            >
+                              Volver al Inicio
+                            </Button>
+                          </div>
+                        </>
                       )}
 
                       {!registrationSuccess && (
                         <Form className="login-page__form">
+                          {formMode === "login" && codeSent && (
+                            <>
+                              <div className="login-page__code-sent-info">
+                                <Alert
+                                  className="login-page__info"
+                                  variant="default"
+                                >
+                                  <Mail className="h-4 w-4" />
+                                  <AlertDescription>
+                                    Se ha enviado un código de verificación a{" "}
+                                    <strong>{pendingEmail}</strong>. Ingresa el
+                                    código para acceder a tu cuenta.
+                                  </AlertDescription>
+                                </Alert>
+                              </div>
+
+                              <div className="login-page__field">
+                                <Label
+                                  htmlFor="code"
+                                  className="login-page__label"
+                                >
+                                  Código de Verificación
+                                </Label>
+                                <div className="login-page__input-wrapper">
+                                  <Lock className="login-page__input-icon" />
+                                  <Input
+                                    id="code"
+                                    name="code"
+                                    type="text"
+                                    placeholder="Ingresa el código de 6 dígitos"
+                                    value={values.code}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="login-page__input"
+                                    maxLength={6}
+                                  />
+                                </div>
+                                <ErrorMessage
+                                  name="code"
+                                  component="div"
+                                  className="login-page__error-message"
+                                />
+                              </div>
+                            </>
+                          )}
+
                           {formMode === "register" && (
                             <>
                               <div className="login-page__field">
@@ -342,34 +431,37 @@ export default function LoginPage() {
                             </>
                           )}
 
-                          <div className="login-page__field">
-                            <Label
-                              htmlFor="email"
-                              className="login-page__label"
-                            >
-                              Email Profesional
-                            </Label>
-                            <div className="login-page__input-wrapper">
-                              <Mail className="login-page__input-icon" />
-                              <Input
-                                id="email"
+                          {(formMode === "login" && !codeSent) ||
+                          formMode === "register" ? (
+                            <div className="login-page__field">
+                              <Label
+                                htmlFor="email"
+                                className="login-page__label"
+                              >
+                                Email Profesional
+                              </Label>
+                              <div className="login-page__input-wrapper">
+                                <Mail className="login-page__input-icon" />
+                                <Input
+                                  id="email"
+                                  name="email"
+                                  type="email"
+                                  placeholder="tu.email@profesional.com"
+                                  value={values.email}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  className="login-page__input"
+                                />
+                              </div>
+                              <ErrorMessage
                                 name="email"
-                                type="email"
-                                placeholder="tu.email@profesional.com"
-                                value={values.email}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                className="login-page__input"
+                                component="div"
+                                className="login-page__error-message"
                               />
                             </div>
-                            <ErrorMessage
-                              name="email"
-                              component="div"
-                              className="login-page__error-message"
-                            />
-                          </div>
+                          ) : null}
 
-                          {formMode === "login" && (
+                          {formMode === "login" && !codeSent && (
                             <div className="login-page__forgot-password">
                               <Link
                                 to="/forgot-password"
@@ -387,9 +479,11 @@ export default function LoginPage() {
                           >
                             {isSubmitting || isLoading
                               ? "Procesando..."
-                              : formMode === "login"
-                                ? "Acceder al Portal"
-                                : "Crear Cuenta de Autor"}
+                              : formMode === "login" && codeSent
+                                ? "Verificar Código"
+                                : formMode === "login"
+                                  ? "Enviar Código"
+                                  : "Crear Cuenta de Autor"}
                           </Button>
                         </Form>
                       )}

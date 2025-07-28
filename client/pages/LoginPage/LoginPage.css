@@ -182,6 +182,32 @@
   }
 }
 
+/* Loading Redirect */
+.login-page__loading-redirect {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+}
+
+.login-page__loading-redirect p {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 .login-page__card {
   width: 100%;
   max-width: 450px;
@@ -251,6 +277,13 @@
   border-color: hsl(142 76% 36%);
   background-color: hsl(143 85% 96%);
   color: hsl(140 100% 27%);
+}
+
+.login-page__info {
+  margin-bottom: 1.5rem;
+  border-color: hsl(213 94% 68%);
+  background-color: hsl(214 100% 97%);
+  color: hsl(213 94% 27%);
 }
 
 .login-page__success-actions {

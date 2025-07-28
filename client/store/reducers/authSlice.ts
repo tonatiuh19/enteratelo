@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AuthState, User } from "../state/types";
 import {
   loginUser,
+  validateSessionCode,
   registerUser,
   logoutUser,
   loadStoredUser,
@@ -13,6 +14,8 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  codeSent: false,
+  pendingEmail: null,
 };
 
 const authSlice = createSlice({
@@ -36,14 +39,36 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload;
+        // Don't authenticate yet, just set codeSent state
+        state.isAuthenticated = false;
+        state.user = null;
+        state.codeSent = true;
+        state.pendingEmail = action.payload.email;
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
+        state.codeSent = false; // Reset codeSent on error
+        state.pendingEmail = null; // Clear pending email on error
+        state.error = action.payload as string;
+      })
+      // Verify Login Code
+      .addCase(validateSessionCode.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(validateSessionCode.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload;
+        state.codeSent = false;
+        state.pendingEmail = null;
+        state.error = null;
+      })
+      .addCase(validateSessionCode.rejected, (state, action) => {
+        state.isLoading = false;
         state.error = action.payload as string;
       })
       // Register
@@ -63,18 +88,19 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
       // Logout
-      .addCase(logoutUser.fulfilled, (state) => {
+      .addCase(logoutUser.fulfilled, (state, action) => {
+        // Use the returned initial state from the action
         state.isAuthenticated = false;
         state.user = null;
         state.error = null;
         state.isLoading = false;
+        state.codeSent = false;
+        state.pendingEmail = null;
       })
       // Load stored user
       .addCase(loadStoredUser.fulfilled, (state, action) => {
-        if (action.payload) {
-          state.user = action.payload;
-          state.isAuthenticated = action.payload.status === "active";
-        }
+        // Since we removed localStorage, this always returns null
+        // No action needed - state remains as is
       })
       // Update profile
       .addCase(updateUserProfile.pending, (state) => {

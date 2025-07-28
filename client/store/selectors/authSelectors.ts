@@ -6,6 +6,8 @@ export const selectUser = (state: any) => state.auth.user;
 export const selectIsAuthenticated = (state: any) => state.auth.isAuthenticated;
 export const selectAuthLoading = (state: any) => state.auth.isLoading;
 export const selectAuthError = (state: any) => state.auth.error;
+export const selectCodeSent = (state: any) => state.auth.codeSent;
+export const selectPendingEmail = (state: any) => state.auth.pendingEmail;
 
 // Memoized selectors
 export const selectUserRole = createSelector(
@@ -25,7 +27,7 @@ export const selectIsAdmin = createSelector(
 
 export const selectUserSpecialty = createSelector(
   [selectUser],
-  (user) => user?.specialty,
+  (user) => user?.specialization,
 );
 
 export const selectUserStatus = createSelector(
