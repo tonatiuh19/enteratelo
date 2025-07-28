@@ -98,9 +98,25 @@ const authSlice = createSlice({
         state.pendingEmail = null;
       })
       // Load stored user
+      .addCase(loadStoredUser.pending, (state) => {
+        state.isLoading = true;
+      })
       .addCase(loadStoredUser.fulfilled, (state, action) => {
-        // Since we removed localStorage, this always returns null
-        // No action needed - state remains as is
+        state.isLoading = false;
+        if (action.payload) {
+          // User found in localStorage and session is valid
+          state.user = action.payload;
+          state.isAuthenticated = true;
+        } else {
+          // No stored user or session expired
+          state.user = null;
+          state.isAuthenticated = false;
+        }
+      })
+      .addCase(loadStoredUser.rejected, (state) => {
+        state.isLoading = false;
+        state.user = null;
+        state.isAuthenticated = false;
       })
       // Update profile
       .addCase(updateUserProfile.pending, (state) => {

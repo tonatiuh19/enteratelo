@@ -6,3 +6,4 @@ export { default as NotFoundPage } from "./NotFoundPage/NotFoundPage";
 export { default as LoginPage } from "./LoginPage/LoginPage";
 export { default as AuthorDashboard } from "./AuthorDashboard/AuthorDashboard";
 export { default as NewArticle } from "./NewArticle/NewArticle";
+export { default as AuthorProfile } from "./AuthorProfile/AuthorProfile";

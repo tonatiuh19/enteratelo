@@ -114,6 +114,11 @@ export const validateSessionCode = createAsyncThunk(
           loginTime: new Date().toISOString(),
         };
 
+        // Store authentication data in localStorage
+        localStorage.setItem("auth_user", JSON.stringify(user));
+        localStorage.setItem("auth_session", "true");
+        localStorage.setItem("auth_timestamp", new Date().getTime().toString());
+
         return user;
       } else {
         throw new Error(response.data?.message || "Código inválido");
@@ -169,6 +174,11 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
+      // Clear localStorage on logout
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_session");
+      localStorage.removeItem("auth_timestamp");
+
       // Return initial auth state
       // In a real app, you'd make an API call to invalidate the session
       return {
@@ -189,9 +199,36 @@ export const loadStoredUser = createAsyncThunk(
   "auth/loadStoredUser",
   async (_, { rejectWithValue }) => {
     try {
-      // No localStorage to check - return null (user data only in store)
+      // Check if user data exists in localStorage
+      const storedUser = localStorage.getItem("auth_user");
+      const storedSession = localStorage.getItem("auth_session");
+      const storedTimestamp = localStorage.getItem("auth_timestamp");
+
+      if (storedUser && storedSession === "true" && storedTimestamp) {
+        // Check if session is still valid (24 hours)
+        const sessionAge = new Date().getTime() - parseInt(storedTimestamp);
+        const maxSessionAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+        if (sessionAge < maxSessionAge) {
+          // Session is still valid, return stored user
+          const user = JSON.parse(storedUser);
+          return user;
+        } else {
+          // Session expired, clear localStorage
+          localStorage.removeItem("auth_user");
+          localStorage.removeItem("auth_session");
+          localStorage.removeItem("auth_timestamp");
+          return null;
+        }
+      }
+
+      // No stored session found
       return null;
     } catch (error: any) {
+      // If there's an error parsing stored data, clear it
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_session");
+      localStorage.removeItem("auth_timestamp");
       return rejectWithValue(error.message || "Error al cargar usuario");
     }
   },
@@ -216,6 +253,10 @@ export const updateUserProfile = createAsyncThunk(
         status: userData.status || "active",
         loginTime: new Date().toISOString(),
       };
+
+      // Update localStorage with the new user data
+      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+
       return updatedUser;
     } catch (error: any) {
       return rejectWithValue(error.message || "Error al actualizar perfil");

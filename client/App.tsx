@@ -17,6 +17,7 @@ import {
   LoginPage,
   AuthorDashboard,
   NewArticle,
+  AuthorProfile,
 } from "./pages";
 
 const App = () => (
@@ -44,6 +45,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <NewArticle />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/author/profile"
+              element={
+                <ProtectedRoute>
+                  <AuthorProfile />
                 </ProtectedRoute>
               }
             />

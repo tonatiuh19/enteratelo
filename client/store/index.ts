@@ -3,6 +3,7 @@ import { useDispatch, useSelector, TypedUseSelectorHook } from "react-redux";
 import authReducer from "./reducers/authSlice.js";
 import articlesReducer from "./reducers/articlesSlice.js";
 import uiReducer from "./reducers/uiSlice.js";
+import categoriesReducer from "./reducers/categoriesSlice.js";
 import { authEffectsMiddleware, uiEffectsMiddleware } from "./effects";
 
 export const store = configureStore({
@@ -10,6 +11,7 @@ export const store = configureStore({
     auth: authReducer,
     articles: articlesReducer,
     ui: uiReducer,
+    categories: categoriesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

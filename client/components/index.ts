@@ -9,3 +9,4 @@ export { ProtectedRoute } from "./ProtectedRoute/ProtectedRoute";
 // Feature Components
 export { ArticleCard } from "./ArticleCard/ArticleCard";
 export { LatestNews } from "./LatestNews/LatestNews";
+export { RichContentEditor } from "./RichContentEditor/RichContentEditor";
