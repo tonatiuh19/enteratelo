@@ -3,9 +3,11 @@ import { ArticlesState, Article } from "../state/types";
 import {
   fetchArticles,
   fetchArticleById,
+  fetchArticlesByAuthorId,
   createArticle,
   updateArticle,
   deleteArticle,
+  insertArticle,
 } from "../actions/articlesActions";
 
 const initialState: ArticlesState = {
@@ -78,6 +80,21 @@ const articlesSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
+      // Fetch articles by author ID
+      .addCase(fetchArticlesByAuthorId.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchArticlesByAuthorId.fulfilled, (state, action) => {
+        state.isLoading = false;
+        // Replace articles with the author's articles
+        state.articles = action.payload.articles;
+        state.error = null;
+      })
+      .addCase(fetchArticlesByAuthorId.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
       // Create article
       .addCase(createArticle.pending, (state) => {
         state.isLoading = true;
@@ -112,6 +129,23 @@ const articlesSlice = createSlice({
         if (state.currentArticle?.id === action.payload) {
           state.currentArticle = null;
         }
+      })
+      // Insert article
+      .addCase(insertArticle.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(insertArticle.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+        // Update articles list with the new articles from API response
+        if (action.payload.articles) {
+          state.articles = action.payload.articles;
+        }
+      })
+      .addCase(insertArticle.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });

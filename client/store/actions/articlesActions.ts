@@ -1,5 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { Article } from "../state/types";
+import { Article, DOMAIN } from "../state/types";
+import { AppDispatch, RootState } from "../index";
+import axios from "axios";
 
 export interface FetchArticlesParams {
   page?: number;
@@ -7,6 +9,10 @@ export interface FetchArticlesParams {
   category?: string;
   author?: string;
   search?: string;
+}
+
+export interface FetchArticlesByAuthorParams {
+  authorId: string;
 }
 
 // Mock data service
@@ -106,6 +112,47 @@ export const fetchArticleById = createAsyncThunk(
   },
 );
 
+export const fetchArticlesByAuthorId = createAsyncThunk(
+  "articles/fetchArticlesByAuthorId",
+  async (params: FetchArticlesByAuthorParams, { rejectWithValue }) => {
+    try {
+      console.log("Fetching articles for author ID:", params.authorId);
+
+      const response = await axios.post(
+        `${DOMAIN}/getArticlesByAuthorId.php`,
+        {
+          author_id: params.authorId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      console.log("Articles by author response:", response.data);
+
+      if (response.data.success) {
+        return {
+          articles: response.data.articles || [],
+          authorId: params.authorId,
+        };
+      } else {
+        return rejectWithValue(
+          response.data.error || "Error al cargar artículos del autor",
+        );
+      }
+    } catch (error: any) {
+      console.error("Error fetching articles by author:", error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+          error.message ||
+          "Error al cargar artículos del autor",
+      );
+    }
+  },
+);
+
 export const createArticle = createAsyncThunk(
   "articles/createArticle",
   async (
@@ -167,6 +214,149 @@ export const deleteArticle = createAsyncThunk(
       return articleId;
     } catch (error: any) {
       return rejectWithValue(error.message || "Error al eliminar artículo");
+    }
+  },
+);
+
+// Insert Article with real API call
+export interface InsertArticleParams {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  content_blocks: string;
+  category_id: number;
+  meta_title: string;
+  meta_description: string;
+  meta_keywords: string;
+  canonical_url?: string;
+  featured_image_caption?: string;
+  gallery?: string;
+  status: string;
+  published_at?: string;
+  scheduled_at?: string;
+  is_featured: boolean;
+  is_trending: boolean;
+  is_breaking_news: boolean;
+  is_editors_pick: boolean;
+  tags: string[];
+  external_source?: string;
+  language?: string;
+  featured_image?: File;
+  content_images?: { [key: string]: File };
+  image_url?: string;
+}
+
+export const insertArticle = createAsyncThunk(
+  "articles/insertArticle",
+  async (articleData: InsertArticleParams, { rejectWithValue, getState }) => {
+    try {
+      const state = getState() as RootState;
+      console.log("Inserting article with data:", state);
+      const user = state.auth.user;
+
+      if (!user || (!user.id && !user.user_id)) {
+        return rejectWithValue("Usuario no autenticado");
+      }
+
+      // Get author_id - prefer user_id if available, fallback to id
+      const authorId = user.user_id || parseInt(user.id) || 0;
+      if (!authorId) {
+        return rejectWithValue("No se pudo obtener el ID del usuario");
+      }
+
+      console.log("User data:", { user, authorId });
+
+      // Create FormData for multipart request
+      const formData = new FormData();
+
+      // Add basic article data with null checking
+      formData.append("title", articleData.title || "");
+      formData.append("slug", articleData.slug || "");
+      formData.append("excerpt", articleData.excerpt || "");
+      formData.append("content", articleData.content || "");
+      formData.append("content_blocks", articleData.content_blocks || "[]");
+      formData.append(
+        "category_id",
+        articleData.category_id?.toString() || "0",
+      );
+      formData.append("author_id", authorId.toString());
+      formData.append("meta_title", articleData.meta_title || "");
+      formData.append("meta_description", articleData.meta_description || "");
+      formData.append("meta_keywords", articleData.meta_keywords || "");
+      formData.append("canonical_url", articleData.canonical_url || "");
+      formData.append(
+        "featured_image_caption",
+        articleData.featured_image_caption || "",
+      );
+      formData.append("gallery", articleData.gallery || "");
+      formData.append("status", articleData.status || "draft");
+      formData.append("published_at", articleData.published_at || "");
+      formData.append("scheduled_at", articleData.scheduled_at || "");
+      formData.append("is_featured", articleData.is_featured ? "1" : "0");
+      formData.append("is_trending", articleData.is_trending ? "1" : "0");
+      formData.append(
+        "is_breaking_news",
+        articleData.is_breaking_news ? "1" : "0",
+      );
+      formData.append(
+        "is_editors_pick",
+        articleData.is_editors_pick ? "1" : "0",
+      );
+      formData.append("tags", JSON.stringify(articleData.tags || []));
+      formData.append("external_source", articleData.external_source || "");
+      formData.append("language", articleData.language || "es");
+
+      console.log("FormData entries:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, ":", value);
+      }
+
+      // Add image URL if provided (for URL mode)
+      if (articleData.image_url) {
+        formData.append("image_url", articleData.image_url);
+      }
+
+      // Add featured image file if provided (for upload mode)
+      if (articleData.featured_image) {
+        formData.append("featured_image", articleData.featured_image);
+      }
+
+      // Add content images if provided
+      if (articleData.content_images) {
+        Object.entries(articleData.content_images).forEach(([key, file]) => {
+          formData.append(key, file);
+        });
+      }
+
+      const response = await axios.post(
+        `${DOMAIN}/insertArticle.php`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      if (response.data.success) {
+        return {
+          success: true,
+          articles: response.data.articles,
+          message: "Artículo publicado exitosamente",
+        };
+      } else {
+        return rejectWithValue(
+          response.data.error || "Error al insertar artículo",
+        );
+      }
+    } catch (error: any) {
+      console.error("Error inserting article:", error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+          error.message ||
+          "Error al insertar artículo",
+      );
     }
   },
 );

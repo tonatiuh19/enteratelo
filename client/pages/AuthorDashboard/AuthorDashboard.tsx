@@ -2,11 +2,16 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { logoutUser } from "@/store/actions/authActions";
+import { fetchArticlesByAuthorId } from "@/store/actions/articlesActions";
 import {
   selectUser,
   selectIsAuthenticated,
   selectAuthLoading,
 } from "@/store/selectors/authSelectors";
+import {
+  selectAllArticles,
+  selectArticlesLoading,
+} from "@/store/selectors/articlesSelectors";
 import { Layout } from "@/components/Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,6 +45,12 @@ export default function AuthorDashboard() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const isLoading = useAppSelector(selectAuthLoading);
 
+  // Articles state
+  const allArticles = useAppSelector(selectAllArticles);
+  const articlesLoading = useAppSelector(selectArticlesLoading);
+  // Since we're fetching user articles directly, we can use allArticles as userArticles
+  const userArticles = allArticles;
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
@@ -47,10 +58,35 @@ export default function AuthorDashboard() {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
+  // Fetch articles when component mounts or user changes
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const authorId = user.user_id?.toString() || user.id?.toString();
+      if (authorId) {
+        console.log("Fetching articles for author ID:", authorId);
+        dispatch(fetchArticlesByAuthorId({ authorId }));
+      }
+    }
+  }, [dispatch, isAuthenticated, user]);
+
+  // Debug user articles
+  useEffect(() => {
+    console.log("User:", user);
+    console.log("User articles (from API):", userArticles);
+  }, [user, userArticles]);
+
   const handleLogout = () => {
     dispatch(logoutUser());
     navigate("/");
   };
+
+  // Calculate stats from user articles
+  const totalViews = userArticles.reduce(
+    (sum, article) => sum + (article.viewCount || 0),
+    0,
+  );
+  const averageViews =
+    userArticles.length > 0 ? Math.round(totalViews / userArticles.length) : 0;
 
   if (!user) {
     return (
@@ -157,7 +193,7 @@ export default function AuthorDashboard() {
                 </div>
                 <div className="author-dashboard__stat-info">
                   <p className="author-dashboard__stat-number">
-                    {user.article_count || 0}
+                    {userArticles.length}
                   </p>
                   <p className="author-dashboard__stat-label">Artículos</p>
                 </div>
@@ -171,7 +207,7 @@ export default function AuthorDashboard() {
                 </div>
                 <div className="author-dashboard__stat-info">
                   <p className="author-dashboard__stat-number">
-                    {user.total_views?.toLocaleString() || 0}
+                    {totalViews.toLocaleString()}
                   </p>
                   <p className="author-dashboard__stat-label">Vistas Totales</p>
                 </div>
@@ -184,9 +220,7 @@ export default function AuthorDashboard() {
                   <Heart className="h-8 w-8" />
                 </div>
                 <div className="author-dashboard__stat-info">
-                  <p className="author-dashboard__stat-number">
-                    {user.total_likes?.toLocaleString() || 0}
-                  </p>
+                  <p className="author-dashboard__stat-number">0</p>
                   <p className="author-dashboard__stat-label">Me Gusta</p>
                 </div>
               </CardContent>
@@ -199,9 +233,7 @@ export default function AuthorDashboard() {
                 </div>
                 <div className="author-dashboard__stat-info">
                   <p className="author-dashboard__stat-number">
-                    {user.total_views && user.article_count
-                      ? Math.round(user.total_views / user.article_count)
-                      : 0}
+                    {averageViews}
                   </p>
                   <p className="author-dashboard__stat-label">
                     Promedio/Artículo
@@ -290,22 +322,107 @@ export default function AuthorDashboard() {
             >
               <Card>
                 <CardHeader>
-                  <CardTitle>Mis Artículos</CardTitle>
+                  <CardTitle>Mis Artículos ({userArticles.length})</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="author-dashboard__articles-empty">
-                    <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                    <p className="text-center text-gray-600 mb-4">
-                      Aún no has publicado ningún artículo
-                    </p>
-                    <Button
-                      onClick={() => navigate("/author/new-article")}
-                      className="mx-auto"
-                    >
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Crear Tu Primer Artículo
-                    </Button>
-                  </div>
+                  {articlesLoading ? (
+                    <div className="text-center py-8">
+                      <p>Cargando artículos...</p>
+                    </div>
+                  ) : userArticles.length === 0 ? (
+                    <div className="author-dashboard__articles-empty">
+                      <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                      <p className="text-center text-gray-600 mb-4">
+                        Aún no has publicado ningún artículo
+                      </p>
+                      <Button
+                        onClick={() => navigate("/author/new-article")}
+                        className="mx-auto"
+                      >
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Crear Tu Primer Artículo
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {userArticles.map((article) => (
+                        <div
+                          key={article.id}
+                          className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+                                {article.title}
+                              </h3>
+                              <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                                {article.excerpt}
+                              </p>
+                              <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  <Eye className="h-4 w-4" />
+                                  {article.viewCount || 0} vistas
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Heart className="h-4 w-4" />0 me gusta
+                                </span>
+                                <Badge
+                                  variant={
+                                    article.status === "published"
+                                      ? "default"
+                                      : "secondary"
+                                  }
+                                  className="text-xs"
+                                >
+                                  {article.status === "published"
+                                    ? "Publicado"
+                                    : "Borrador"}
+                                </Badge>
+                                {article.featured && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Destacado
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 ml-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  navigate(`/articulo/${article.id}`)
+                                }
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Ver
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  navigate(`/author/edit-article/${article.id}`)
+                                }
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                Editar
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="mt-3 pt-3 border-t text-xs text-gray-500">
+                            Publicado el{" "}
+                            {new Date(article.publishedAt).toLocaleDateString(
+                              "es-ES",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              },
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

@@ -6,6 +6,10 @@ import {
   selectAuthLoading,
 } from "@/store/selectors/authSelectors";
 import { selectActiveCategories } from "@/store/selectors/categoriesSelectors";
+import {
+  insertArticle,
+  InsertArticleParams,
+} from "@/store/actions/articlesActions";
 import { Layout } from "@/components/Layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,32 +43,234 @@ export default function NewArticle() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const isLoading = useAppSelector(selectAuthLoading);
   const categories = useAppSelector(selectActiveCategories);
+  const articlesLoading = useAppSelector((state) => state.articles.isLoading);
+  const articlesError = useAppSelector((state) => state.articles.error);
 
+  // TODO: REMOVE - Test data for development only
   const [articleData, setArticleData] = useState({
-    title: "",
+    title: "Breaking: Nueva Tecnología Revoluciona el Mercado Digital", // TEST DATA - Remove in production
     content: "",
-    excerpt: "",
-    category: "",
+    excerpt:
+      "Un análisis profundo sobre las últimas innovaciones tecnológicas que están transformando el panorama digital y empresarial en América Latina.", // TEST DATA - Remove in production
+    category: "1", // TEST DATA - Assuming category ID 1 exists, remove in production
     tags: "",
-    image_url: "",
-    featured_image_caption: "",
+    image_url: "", // Will be set by the useEffect when file is created
+    featured_image_caption: "Imagen representativa de tecnología digital", // TEST DATA - Remove in production
     is_breaking: false,
-    is_trending: false,
+    is_trending: true, // TEST DATA - Remove in production
     publish_datetime: "",
-    seo_title: "",
-    seo_description: "",
-    seo_keywords: "",
+    seo_title: "Nueva Tecnología Digital - Análisis Completo 2025", // TEST DATA - Remove in production
+    seo_description:
+      "Descubre las últimas innovaciones tecnológicas que están revolucionando el mercado digital. Análisis completo y perspectivas futuras.", // TEST DATA - Remove in production
+    seo_keywords: "tecnología, innovación, digital, mercado, análisis, 2025", // TEST DATA - Remove in production
   });
 
   const [contentBlocks, setContentBlocks] = useState<any[]>([]);
-  const [tagsList, setTagsList] = useState<string[]>([]);
+  // TODO: REMOVE - Test tags for development only
+  const [tagsList, setTagsList] = useState<string[]>([
+    "tecnología",
+    "innovación",
+    "digital",
+  ]); // TEST DATA - Remove in production, should start empty
+
+  // TODO: REMOVE - Create sample content blocks with images for testing only
+  // This entire useEffect should be removed in production
+  React.useEffect(() => {
+    const createContentBlocksWithImages = async () => {
+      // Create sample image files for content
+      const createContentImageFile = (text: string, bgColor: string) => {
+        return new Promise<File>((resolve) => {
+          const canvas = document.createElement("canvas");
+          canvas.width = 600;
+          canvas.height = 300;
+          const ctx = canvas.getContext("2d");
+
+          if (ctx) {
+            // Background
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, 600, 300);
+
+            // Text
+            ctx.fillStyle = "white";
+            ctx.font = "bold 24px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(text, 300, 150);
+
+            canvas.toBlob(
+              (blob) => {
+                if (blob) {
+                  const fileName =
+                    text.toLowerCase().replace(/\s+/g, "-") + ".png";
+                  const file = new File([blob], fileName, {
+                    type: "image/png",
+                  });
+                  resolve(file);
+                }
+              },
+              "image/png",
+              0.8,
+            );
+          }
+        });
+      };
+
+      // Create image files
+      const chartImage = await createContentImageFile(
+        "Technology Growth Chart",
+        "#4f46e5",
+      );
+      const diagramImage = await createContentImageFile(
+        "Digital Innovation Process",
+        "#059669",
+      );
+
+      // Convert files to data URLs for preview
+      const getDataUrl = (file: File): Promise<string> => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(file);
+        });
+      };
+
+      const chartDataUrl = await getDataUrl(chartImage);
+      const diagramDataUrl = await getDataUrl(diagramImage);
+
+      // TEST DATA - Sample content blocks with generated images
+      // Remove all these blocks in production - should start empty
+      const blocksWithImages = [
+        {
+          id: "1",
+          type: "text",
+          content: {
+            text: "La tecnología está avanzando a un ritmo sin precedentes, transformando la manera en que las empresas operan y los consumidores interactúan con los servicios digitales.", // TEST CONTENT
+            fontSize: 16,
+            fontWeight: "normal",
+            textAlign: "left",
+          },
+        },
+        {
+          id: "2",
+          type: "image",
+          content: {
+            url: chartDataUrl,
+            alt: "Gráfico de crecimiento tecnológico", // TEST CONTENT
+            caption: "Evolución del sector tecnológico en los últimos años", // TEST CONTENT
+            uploadMode: "upload",
+            file: chartImage, // TEST FILE - Canvas generated
+          },
+        },
+        {
+          id: "3",
+          type: "text",
+          content: {
+            text: "En este artículo analizaremos las principales tendencias que están marcando el futuro del sector tecnológico en América Latina.", // TEST CONTENT
+            fontSize: 16,
+            fontWeight: "normal",
+            textAlign: "left",
+          },
+        },
+        {
+          id: "4",
+          type: "quote",
+          content: {
+            text: "La transformación digital no es solo una opción, es una necesidad imperativa para mantenerse competitivo en el mercado actual.", // TEST CONTENT
+            author: "Ana García", // TEST AUTHOR
+            source: "CEO Tech Innovations", // TEST SOURCE
+            fontSize: 18,
+            textAlign: "center",
+          },
+        },
+        {
+          id: "5",
+          type: "image",
+          content: {
+            url: diagramDataUrl,
+            alt: "Diagrama del proceso de innovación digital", // TEST CONTENT
+            caption:
+              "Proceso completo de implementación de innovaciones digitales", // TEST CONTENT
+            uploadMode: "upload",
+            file: diagramImage, // TEST FILE - Canvas generated
+          },
+        },
+        {
+          id: "6",
+          type: "text",
+          content: {
+            text: "Las empresas que han adoptado estas tecnologías han reportado incrementos significativos en su productividad y satisfacción del cliente.", // TEST CONTENT
+            fontSize: 16,
+            fontWeight: "normal",
+            textAlign: "left",
+          },
+        },
+      ];
+
+      setContentBlocks(blocksWithImages);
+    };
+
+    createContentBlocksWithImages(); // TEST FUNCTION - Remove in production
+  }, []); // TODO: Remove entire useEffect in production
   const [showPreview, setShowPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageUploadMode, setImageUploadMode] = useState<"url" | "upload">(
-    "url",
+    "upload", // TODO: REMOVE - Changed to upload mode for testing, should default to "url" in production
   );
   const [uploadedImageFile, setUploadedImageFile] = useState<File | null>(null);
+
+  // TODO: REMOVE - Create a sample image file for testing only
+  // This entire useEffect should be removed in production
+  React.useEffect(() => {
+    // Create a sample blob image for testing
+    const createSampleImageFile = () => {
+      // Create a canvas with sample content
+      const canvas = document.createElement("canvas");
+      canvas.width = 800;
+      canvas.height = 400;
+      const ctx = canvas.getContext("2d");
+
+      if (ctx) {
+        // Create a gradient background
+        const gradient = ctx.createLinearGradient(0, 0, 800, 400);
+        gradient.addColorStop(0, "#667eea");
+        gradient.addColorStop(1, "#764ba2");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 800, 400);
+
+        // Add text
+        ctx.fillStyle = "white";
+        ctx.font = "bold 48px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Sample Featured Image", 400, 200); // TEST TEXT
+        ctx.font = "24px Arial";
+        ctx.fillText("Technology & Innovation", 400, 250); // TEST TEXT
+
+        // Convert canvas to blob
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const file = new File([blob], "sample-featured-image.png", {
+                type: "image/png",
+              }); // TEST FILE
+              setUploadedImageFile(file);
+
+              // Create preview URL
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const result = e.target?.result as string;
+                setArticleData((prev) => ({ ...prev, image_url: result })); // TEST DATA
+              };
+              reader.readAsDataURL(file);
+            }
+          },
+          "image/png",
+          0.8,
+        );
+      }
+    };
+
+    createSampleImageFile(); // TEST FUNCTION - Remove in production
+  }, []); // TODO: Remove entire useEffect in production
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setArticleData((prev) => ({
@@ -420,33 +626,99 @@ export default function NewArticle() {
 
     try {
       const htmlContent = convertContentBlocksToHTML();
-      const articleWithContent = {
-        ...articleData,
-        content: htmlContent, // Save as HTML string instead of JSON
-        content_blocks: JSON.stringify(contentBlocks), // Keep original blocks for editing
-        tags: tagsList,
+
+      // Prepare content images for upload
+      const contentImages: { [key: string]: File } = {};
+      contentBlocks.forEach((block, idx) => {
+        console.log(`Block ${idx}:`, block); // Debug log
+        if (
+          block.type === "image" &&
+          block.content &&
+          block.content.file instanceof File
+        ) {
+          contentImages[`content_image_${idx}`] = block.content.file;
+          console.log(`Added content image ${idx}:`, block.content.file.name);
+        }
+      });
+      console.log("Content images prepared:", Object.keys(contentImages));
+
+      // Validate category_id
+      const categoryId = parseInt(articleData.category);
+      if (isNaN(categoryId) || categoryId <= 0) {
+        throw new Error("Categoría inválida seleccionada");
+      }
+
+      // Generate slug from title if not provided
+      const slug = articleData.title
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // Remove accents
+        .replace(/[^a-z0-9\s]/g, "")
+        .replace(/\s+/g, "-")
+        .substring(0, 100);
+
+      const articleParams: InsertArticleParams = {
+        title: articleData.title,
+        slug: slug,
+        excerpt: articleData.excerpt,
+        content: htmlContent,
+        content_blocks: JSON.stringify(contentBlocks),
+        category_id: categoryId,
+        meta_title: articleData.seo_title,
+        meta_description: articleData.seo_description,
+        meta_keywords: articleData.seo_keywords,
+        canonical_url: "",
+        featured_image_caption: articleData.featured_image_caption,
+        gallery: "",
         status: "published",
         published_at: new Date().toISOString(),
+        scheduled_at: articleData.publish_datetime || null,
+        is_featured: false,
+        is_trending: articleData.is_trending,
+        is_breaking_news: articleData.is_breaking,
+        is_editors_pick: false,
+        tags: tagsList,
+        external_source: "",
+        language: "es",
+        featured_image:
+          imageUploadMode === "upload" && uploadedImageFile
+            ? uploadedImageFile
+            : undefined,
+        content_images:
+          Object.keys(contentImages).length > 0 ? contentImages : undefined,
+        image_url:
+          imageUploadMode === "url" && articleData.image_url
+            ? articleData.image_url
+            : undefined,
       };
 
-      console.log("Publishing article successfully:", articleWithContent);
-      console.log("Article validation passed!");
-      console.log("Content as HTML:", htmlContent);
-      console.log("Content blocks (for editing):", contentBlocks);
-      console.log("Tags:", tagsList);
+      console.log("Article params to send:", articleParams);
 
-      // TODO: Implement actual publish API call
-      // await publishArticleAPI(articleWithContent);
+      const result = await dispatch(insertArticle(articleParams));
 
-      // Reset form or redirect on success
-      // navigate("/author/dashboard");
+      if (insertArticle.fulfilled.match(result)) {
+        console.log("Article published successfully:", result.payload);
+        // Navigate to author dashboard or show success message
+        navigate("/author/dashboard");
+      } else {
+        console.error("Error publishing article:", result.payload);
+        // Handle error (show notification, etc.)
+        alert(`Error: ${result.payload}`);
+      }
     } catch (error) {
       console.error("Error publishing article:", error);
-      // Handle error (show notification, etc.)
+      alert("Error inesperado al publicar el artículo");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Show error from store if any
+  React.useEffect(() => {
+    if (articlesError) {
+      alert(`Error: ${articlesError}`);
+    }
+  }, [articlesError]);
 
   // Preview Component
   const ArticlePreview = () => {
@@ -689,9 +961,11 @@ export default function NewArticle() {
               <Button
                 onClick={handlePublish}
                 className="new-article__publish-btn"
-                disabled={isSubmitting}
+                disabled={isSubmitting || articlesLoading}
               >
-                {isSubmitting ? "Publicando..." : "Publicar Artículo"}
+                {isSubmitting || articlesLoading
+                  ? "Publicando..."
+                  : "Publicar Artículo"}
               </Button>
             </div>
           </div>
@@ -752,7 +1026,6 @@ export default function NewArticle() {
                     <RichContentEditor
                       initialContent={contentBlocks}
                       onChange={setContentBlocks}
-                      autoLineBreak={true}
                     />
                     {errors.content && (
                       <span className="text-red-500 text-sm">
