@@ -701,29 +701,29 @@ export default function ArticlePage() {
                 <div className="article-page__share-buttons">
                   <span className="font-medium">Compartir artículo:</span>
                   <div className="article-page__social-share">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => shareToSocial("twitter")}
                     >
                       <Twitter className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => shareToSocial("facebook")}
                     >
                       <Facebook className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => shareToSocial("whatsapp")}
                     >
                       <MessageCircle className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={copyToClipboard}
                     >
