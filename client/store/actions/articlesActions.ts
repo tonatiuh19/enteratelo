@@ -67,6 +67,40 @@ export const fetchArticleBySlug = createAsyncThunk(
   },
 );
 
+// Fetch Articles by Category Slug with real API call
+export const fetchArticlesByCategorySlug = createAsyncThunk(
+  "articles/fetchArticlesByCategorySlug",
+  async (categorySlug: string, { rejectWithValue }) => {
+    try {
+      console.log("Fetching articles by category slug:", categorySlug);
+
+      const response = await axios.post(
+        `${DOMAIN}/getArticlesByCategorySlug.php`,
+        {
+          slug: categorySlug,
+        },
+      );
+
+      console.log("Fetch articles by category slug response:", response.data);
+
+      if (response.data.success) {
+        return response.data.articles;
+      } else {
+        return rejectWithValue(
+          response.data.error || "Artículos no encontrados",
+        );
+      }
+    } catch (error: any) {
+      console.error("Error fetching articles by category slug:", error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+          error.message ||
+          "Error al obtener artículos de la categoría",
+      );
+    }
+  },
+);
+
 export const fetchArticles = createAsyncThunk(
   "articles/fetchArticles",
   async (params: FetchArticlesParams = {}, { rejectWithValue }) => {

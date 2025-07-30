@@ -4,6 +4,7 @@ import {
   fetchArticles,
   fetchArticleById,
   fetchArticleBySlug,
+  fetchArticlesByCategorySlug,
   fetchArticlesByAuthorId,
   createArticle,
   updateArticle,
@@ -93,6 +94,20 @@ const articlesSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchArticleBySlug.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch articles by category slug
+      .addCase(fetchArticlesByCategorySlug.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchArticlesByCategorySlug.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.articles = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchArticlesByCategorySlug.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })

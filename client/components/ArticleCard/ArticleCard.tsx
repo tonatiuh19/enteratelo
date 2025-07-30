@@ -79,26 +79,23 @@ export function ArticleCard({
           <div className="article-card__stats">
             <div className="article-card__stat">
               <Clock className="h-4 w-4" />
-              {article.readTime} min
-            </div>
-            <div className="article-card__stat">
-              <Eye className="h-4 w-4" />
-              {article.views.toLocaleString()}
-            </div>
-            <div className="article-card__stat">
-              <Heart className="h-4 w-4" />
-              {article.likes.toLocaleString()}
+              {Math.ceil(
+                (article.content?.replace(/<[^>]*>/g, "").split(" ").length ||
+                  0) / 200,
+              )}{" "}
+              min
             </div>
           </div>
           <span className="article-card__author">{article.author}</span>
         </div>
 
         <div className="article-card__tags">
-          {article.tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="outline" className="article-card__tag">
-              {tag}
-            </Badge>
-          ))}
+          {Array.isArray(article.tags) &&
+            article.tags.slice(0, 3).map((tag) => (
+              <Badge key={tag} variant="outline" className="article-card__tag">
+                {tag}
+              </Badge>
+            ))}
         </div>
       </CardContent>
     </Card>

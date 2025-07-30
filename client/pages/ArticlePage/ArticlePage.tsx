@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "@/store";
 import { selectCurrentArticle } from "@/store/selectors/articlesSelectors";
 import { fetchArticleBySlug } from "@/store/actions/articlesActions";
+import { fetchCategories } from "@/store/actions/categoriesActions";
+import { selectAllCategories } from "@/store/selectors/categoriesSelectors";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -33,6 +35,8 @@ import {
   ArrowRight,
   Copy,
   Link as LinkIcon,
+  X as XIcon,
+  Mail,
 } from "lucide-react";
 import { cn, getImageUrl, getLatestFormattedDate } from "@/lib/utils";
 import { Layout } from "@/components/Layout/Layout";
@@ -49,6 +53,7 @@ export default function ArticlePage() {
   // Use Redux auth state instead of useAuth hook
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const categories = useAppSelector(selectAllCategories);
 
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
@@ -61,6 +66,13 @@ export default function ArticlePage() {
       dispatch(fetchArticleBySlug(slug));
     }
   }, [dispatch, slug]);
+
+  // Fetch categories if not already loaded
+  useEffect(() => {
+    if (categories.length === 0) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories.length]);
 
   // Update document metadata dynamically
   useEffect(() => {
@@ -144,7 +156,12 @@ export default function ArticlePage() {
       "article:published_time",
       article.published_at || article.publishedAt || "",
     );
-    updateOGTag("article:section", "Tecnología");
+
+    // Get category for OG tags
+    const articleCategory = categories.find(
+      (c) => Number(c.id) === Number(article.category_id),
+    );
+    updateOGTag("article:section", articleCategory?.name || "Artículos");
 
     // Handle tags from different formats
     const tags = article.tags
@@ -218,7 +235,7 @@ export default function ArticlePage() {
       },
       keywords:
         article.meta_keywords || (Array.isArray(tags) ? tags.join(", ") : ""),
-      articleSection: "Tecnología",
+      articleSection: articleCategory?.name || "Artículos",
       wordCount: article.content
         ? article.content.replace(/<[^>]*>/g, "").split(" ").length
         : 0,
@@ -259,8 +276,13 @@ export default function ArticlePage() {
     };
   }, [article]);
 
+  // Get category from store based on article's category_id
+  const category =
+    article && categories.length > 0
+      ? categories.find((c) => Number(c.id) === Number(article.category_id))
+      : null;
+
   // Mock data for now - these would come from API in real implementation
-  const category = { id: "technology", name: "Tecnología", icon: "🔬" };
   const relatedArticles: any[] = []; // Would be fetched from API
   const articleComments: any[] = []; // Would be fetched from API
 
@@ -393,21 +415,27 @@ export default function ArticlePage() {
                   <span>Inicio</span>
                 </Link>
                 <span className="text-muted-foreground mx-2">•</span>
-                <Link
-                  to={`/categoria/${category?.id}`}
-                  className="article-page__breadcrumb-link"
-                >
-                  {category?.name}
-                </Link>
+                {category ? (
+                  <Link
+                    to={`/categoria/${category.slug}`}
+                    className="article-page__breadcrumb-link"
+                  >
+                    {category.name}
+                  </Link>
+                ) : (
+                  <span className="text-muted-foreground">Categoría</span>
+                )}
                 <span className="text-muted-foreground mx-2">•</span>
                 <span className="text-muted-foreground">Artículo</span>
               </div>
 
               {/* Category Badge */}
-              <Badge className="article-page__category-badge mb-4">
-                <span className="mr-1">{category?.icon}</span>
-                {category?.name}
-              </Badge>
+              {category && (
+                <Badge className="article-page__category-badge mb-4">
+                  <span className="mr-1">{category.icon || "📁"}</span>
+                  {category.name}
+                </Badge>
+              )}
 
               {/* Title */}
               <h1 className="article-page__title">{article.title}</h1>
@@ -461,7 +489,13 @@ export default function ArticlePage() {
                     onClick={() => setLiked(!liked)}
                   >
                     <Heart
-                      className={cn("h-4 w-4 mr-2", liked && "fill-current")}
+                      className={cn(
+                        "h-4 w-4",
+                        liked && "fill-current",
+                        isAuthenticated &&
+                          String(user.id) === String(article.author_id) &&
+                          "mr-2",
+                      )}
                     />
                     {isAuthenticated &&
                       String(user.id) === String(article.author_id) &&
@@ -494,7 +528,7 @@ export default function ArticlePage() {
                             onClick={() => shareToSocial("twitter")}
                             className="flex items-center justify-center"
                           >
-                            <Twitter className="h-4 w-4" />
+                            <XIcon className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="outline"
@@ -519,6 +553,21 @@ export default function ArticlePage() {
                             className="flex items-center justify-center"
                           >
                             <MessageCircle className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center justify-center"
+                            asChild
+                          >
+                            <a
+                              href={`mailto:?subject=${encodeURIComponent(article.title)}&body=${encodeURIComponent(article.excerpt || article.title)}%0A${encodeURIComponent(window.location.href)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="Compartir por correo"
+                            >
+                              <Mail className="h-4 w-4" />
+                            </a>
                           </Button>
                         </div>
                         <Separator className="my-3" />
@@ -706,7 +755,7 @@ export default function ArticlePage() {
                       size="sm"
                       onClick={() => shareToSocial("twitter")}
                     >
-                      <Twitter className="h-4 w-4" />
+                      <XIcon className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
@@ -721,6 +770,21 @@ export default function ArticlePage() {
                       onClick={() => shareToSocial("whatsapp")}
                     >
                       <MessageCircle className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center justify-center"
+                      asChild
+                    >
+                      <a
+                        href={`mailto:?subject=${encodeURIComponent(article.title)}&body=${encodeURIComponent(article.excerpt || article.title)}%0A${encodeURIComponent(window.location.href)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Compartir por correo"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </a>
                     </Button>
                     <Button
                       variant="outline"
@@ -851,13 +915,15 @@ export default function ArticlePage() {
                         </div>
                       ))}
                     <div className="pt-2">
-                      <Link
-                        to={`/categoria/${category?.id}`}
-                        className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors text-sm font-medium"
-                      >
-                        <span>Ver más de {category?.name}</span>
-                        <ArrowRight className="h-3 w-3" />
-                      </Link>
+                      {category && (
+                        <Link
+                          to={`/categoria/${category.slug || category.id}`}
+                          className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors text-sm font-medium"
+                        >
+                          <span>Ver más de {category.name}</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
