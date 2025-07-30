@@ -39,6 +39,7 @@ import {
   Mail,
 } from "lucide-react";
 import { cn, getImageUrl, getLatestFormattedDate } from "@/lib/utils";
+import { getCategoryIcon } from "@/lib/categoryIcons";
 import { Layout } from "@/components/Layout/Layout";
 import { LatestNews } from "@/components/LatestNews/LatestNews";
 import "./ArticlePage.css";
@@ -432,7 +433,9 @@ export default function ArticlePage() {
               {/* Category Badge */}
               {category && (
                 <Badge className="article-page__category-badge mb-4">
-                  <span className="mr-1">{category.icon || "📁"}</span>
+                  <span className="mr-1">
+                    {getCategoryIcon(category.icon || category.name, "w-4 h-4")}
+                  </span>
                   {category.name}
                 </Badge>
               )}

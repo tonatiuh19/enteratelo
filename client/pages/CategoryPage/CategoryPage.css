@@ -9,15 +9,28 @@
   margin-bottom: 3rem;
 }
 
-.category-page__icon {
-  font-size: 3rem;
+.category-page__title-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.category-page__icon {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: hsl(var(--accent));
+  border-radius: 0.75rem;
 }
 
 .category-page__title {
   font-size: 2.5rem;
   font-weight: bold;
-  margin-bottom: 1rem;
+  margin: 0;
 }
 
 @media (min-width: 1024px) {

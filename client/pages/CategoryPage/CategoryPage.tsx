@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowRight } from "lucide-react";
 import { cn, getImageUrl } from "@/lib/utils";
+import { getCategoryIcon } from "@/lib/categoryIcons";
 import { Layout } from "@/components/Layout/Layout";
 import { ArticleCard } from "@/components/ArticleCard/ArticleCard";
 import "./CategoryPage.css";
@@ -179,8 +180,12 @@ export default function CategoryPage() {
         <div className="category-page__container">
           {/* Category Header */}
           <div className="category-page__header">
-            <div className="category-page__icon">{category.icon || "📁"}</div>
-            <h1 className="category-page__title">{category.name}</h1>
+            <div className="category-page__title-section">
+              <div className="category-page__icon">
+                {getCategoryIcon(category.icon || category.name, "w-6 h-6")}
+              </div>
+              <h1 className="category-page__title">{category.name}</h1>
+            </div>
             <p className="category-page__description">
               {category.description ||
                 `Descubre las últimas noticias y artículos sobre ${category.name.toLowerCase()}. Mantente al día con toda la información más relevante.`}

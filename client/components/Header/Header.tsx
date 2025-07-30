@@ -29,6 +29,7 @@ import {
   selectUser,
 } from "@/store/selectors/authSelectors";
 import { selectActiveCategories } from "@/store/selectors/categoriesSelectors";
+import { getCategoryIcon } from "@/lib/categoryIcons";
 import "./Header.css";
 
 export function Header() {
@@ -40,42 +41,6 @@ export function Header() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
   const categories = useAppSelector(selectActiveCategories);
-
-  // Helper function to convert Font Awesome class names to emojis
-  const getIconEmoji = (iconClass: string) => {
-    const iconMap: { [key: string]: string } = {
-      "fa-microchip": "💻",
-      "fa-film": "🎬",
-      "fa-heartbeat": "❤️",
-      "fa-flask": "🔬",
-      "fa-theater-masks": "🎭",
-      "fa-globe": "🌍",
-      "fa-flag": "🚩",
-      "fa-map-marker-alt": "📍",
-      Tecnología: "💻",
-      Entretenimiento: "🎬",
-      Salud: "❤️",
-      Ciencia: "🔬",
-      Cultura: "🎭",
-      Internacional: "🌍",
-      Nacional: "🚩",
-      Local: "📍",
-      Deportes: "⚽",
-    };
-
-    // If it's a Font Awesome class, use the mapping
-    if (iconClass && iconClass.startsWith("fa-")) {
-      return iconMap[iconClass] || "📰";
-    }
-
-    // If it's already an emoji, return as is
-    if (iconClass && /\p{Emoji}/u.test(iconClass)) {
-      return iconClass;
-    }
-
-    // Try to match by name
-    return iconMap[iconClass] || "📰";
-  };
 
   // Add/remove body class when categories panel opens/closes
   useEffect(() => {
@@ -240,12 +205,12 @@ export function Header() {
                 {categories.map((category) => (
                   <Link
                     key={category.id}
-                    to={`/categoria/${category.id}`}
+                    to={`/categoria/${category.slug}`}
                     className="header__categories-panel-link"
                     onClick={() => setCategoriesPanelOpen(false)}
                   >
                     <span className="header__categories-panel-icon">
-                      {getIconEmoji(category.icon)}
+                      {getCategoryIcon(category.icon, "w-5 h-5")}
                     </span>
                     <div className="header__categories-panel-text">
                       <span className="header__categories-panel-name">
@@ -272,7 +237,7 @@ export function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <span className="header__mobile-nav-icon">
-                  {getIconEmoji(category.icon)}
+                  {getCategoryIcon(category.icon, "w-4 h-4")}
                 </span>
                 {category.name}
               </Link>
