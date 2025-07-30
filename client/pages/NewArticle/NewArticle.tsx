@@ -1,14 +1,20 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "@/store";
 import {
   selectIsAuthenticated,
   selectAuthLoading,
+  selectUser,
 } from "@/store/selectors/authSelectors";
 import { selectActiveCategories } from "@/store/selectors/categoriesSelectors";
+import { selectCurrentArticle } from "@/store/selectors/articlesSelectors";
 import {
   insertArticle,
+  fetchArticleById,
+  updateArticle,
+  fetchArticlesByAuthorId,
   InsertArticleParams,
+  UpdateArticleParams,
 } from "@/store/actions/articlesActions";
 import { Layout } from "@/components/Layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -37,240 +43,362 @@ import ArticlePage from "@/pages/ArticlePage/ArticlePage";
 import { Article } from "@/services/data.service";
 import "./NewArticle.css";
 
-export default function NewArticle() {
+interface NewArticleProps {
+  // Remove isEditMode prop - we'll detect it from URL
+}
+
+export default function NewArticle({}: NewArticleProps = {}) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { articleId } = useParams();
+
+  // Detect edit mode from URL parameters
+  const isEditMode = Boolean(articleId);
+
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const isLoading = useAppSelector(selectAuthLoading);
+  const user = useAppSelector(selectUser);
   const categories = useAppSelector(selectActiveCategories);
   const articlesLoading = useAppSelector((state) => state.articles.isLoading);
   const articlesError = useAppSelector((state) => state.articles.error);
+  const currentArticle = useAppSelector(selectCurrentArticle);
 
-  // TODO: REMOVE - Test data for development only
-  const [articleData, setArticleData] = useState({
-    title: "Breaking: Nueva Tecnología Revoluciona el Mercado Digital", // TEST DATA - Remove in production
-    content: "",
-    excerpt:
-      "Un análisis profundo sobre las últimas innovaciones tecnológicas que están transformando el panorama digital y empresarial en América Latina.", // TEST DATA - Remove in production
-    category: "1", // TEST DATA - Assuming category ID 1 exists, remove in production
-    tags: "",
-    image_url: "", // Will be set by the useEffect when file is created
-    featured_image_caption: "Imagen representativa de tecnología digital", // TEST DATA - Remove in production
-    is_breaking: false,
-    is_trending: true, // TEST DATA - Remove in production
-    publish_datetime: "",
-    seo_title: "Nueva Tecnología Digital - Análisis Completo 2025", // TEST DATA - Remove in production
-    seo_description:
-      "Descubre las últimas innovaciones tecnológicas que están revolucionando el mercado digital. Análisis completo y perspectivas futuras.", // TEST DATA - Remove in production
-    seo_keywords: "tecnología, innovación, digital, mercado, análisis, 2025", // TEST DATA - Remove in production
+  // Helper function to get initial article data
+  const getInitialArticleData = () => {
+    if (isEditMode && currentArticle) {
+      // Cast to any to access the new API response fields
+      const articleData = currentArticle as any;
+
+      // Parse tags from the new API format
+      let parsedTags: string[] = [];
+      let tagsString = "";
+
+      if (articleData.tags) {
+        try {
+          let tagsValue = articleData.tags;
+
+          // Remove extra quotes if present
+          if (
+            typeof tagsValue === "string" &&
+            tagsValue.startsWith('"') &&
+            tagsValue.endsWith('"')
+          ) {
+            tagsValue = tagsValue.slice(1, -1);
+          }
+
+          // Unescape the JSON string
+          tagsValue = tagsValue.replace(/\\\"/g, '"').replace(/\\\\/g, "\\");
+
+          // Parse the JSON array
+          parsedTags = JSON.parse(tagsValue);
+          tagsString = parsedTags.join(", ");
+        } catch (error) {
+          console.error("Error parsing tags:", error);
+          if (typeof articleData.tags === "string") {
+            parsedTags = articleData.tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter((tag) => tag.length > 0);
+            tagsString = parsedTags.join(", ");
+          }
+        }
+      }
+
+      // Use category_id directly
+      const categoryId = articleData.category_id?.toString() || "";
+
+      return {
+        title: articleData.title || "",
+        content: articleData.content || "",
+        excerpt: articleData.excerpt || "",
+        category: categoryId,
+        tags: "",
+        image_url: articleData.featured_image_url || "",
+        featured_image_caption: articleData.featured_image_caption || "",
+        is_breaking: Boolean(
+          articleData.is_breaking_news || articleData.is_breaking,
+        ),
+        is_trending: Boolean(articleData.is_trending),
+        publish_datetime: "",
+        seo_title: articleData.meta_title || articleData.title || "",
+        seo_description:
+          articleData.meta_description || articleData.excerpt || "",
+        seo_keywords: articleData.meta_keywords || tagsString,
+      };
+    }
+
+    // Default empty state for new articles
+    return {
+      title: "",
+      content: "",
+      excerpt: "",
+      category: "",
+      tags: "",
+      image_url: "",
+      featured_image_caption: "",
+      is_breaking: false,
+      is_trending: false,
+      publish_datetime: "",
+      seo_title: "",
+      seo_description: "",
+      seo_keywords: "",
+    };
+  };
+
+  const [articleData, setArticleData] = useState(() => {
+    // Initialize with empty data first, will be updated when currentArticle and categories are loaded
+    return {
+      title: "",
+      content: "",
+      excerpt: "",
+      category: "",
+      tags: "",
+      image_url: "",
+      featured_image_caption: "",
+      is_breaking: false,
+      is_trending: false,
+      publish_datetime: "",
+      seo_title: "",
+      seo_description: "",
+      seo_keywords: "",
+    };
   });
 
   const [contentBlocks, setContentBlocks] = useState<any[]>([]);
-  // TODO: REMOVE - Test tags for development only
-  const [tagsList, setTagsList] = useState<string[]>([
-    "tecnología",
-    "innovación",
-    "digital",
-  ]); // TEST DATA - Remove in production, should start empty
+  // Initial tags based on mode
+  const getInitialTags = () => {
+    if (isEditMode && currentArticle) {
+      const articleData = currentArticle as any;
 
-  // TODO: REMOVE - Create sample content blocks with images for testing only
-  // This entire useEffect should be removed in production
-  React.useEffect(() => {
-    const createContentBlocksWithImages = async () => {
-      // Create sample image files for content
-      const createContentImageFile = (text: string, bgColor: string) => {
-        return new Promise<File>((resolve) => {
-          const canvas = document.createElement("canvas");
-          canvas.width = 600;
-          canvas.height = 300;
-          const ctx = canvas.getContext("2d");
+      if (articleData.tags) {
+        try {
+          let tagsValue = articleData.tags;
 
-          if (ctx) {
-            // Background
-            ctx.fillStyle = bgColor;
-            ctx.fillRect(0, 0, 600, 300);
-
-            // Text
-            ctx.fillStyle = "white";
-            ctx.font = "bold 24px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText(text, 300, 150);
-
-            canvas.toBlob(
-              (blob) => {
-                if (blob) {
-                  const fileName =
-                    text.toLowerCase().replace(/\s+/g, "-") + ".png";
-                  const file = new File([blob], fileName, {
-                    type: "image/png",
-                  });
-                  resolve(file);
-                }
-              },
-              "image/png",
-              0.8,
-            );
+          // Remove extra quotes if present
+          if (
+            typeof tagsValue === "string" &&
+            tagsValue.startsWith('"') &&
+            tagsValue.endsWith('"')
+          ) {
+            tagsValue = tagsValue.slice(1, -1);
           }
-        });
-      };
 
-      // Create image files
-      const chartImage = await createContentImageFile(
-        "Technology Growth Chart",
-        "#4f46e5",
-      );
-      const diagramImage = await createContentImageFile(
-        "Digital Innovation Process",
-        "#059669",
-      );
+          // Unescape the JSON string
+          tagsValue = tagsValue.replace(/\\\"/g, '"').replace(/\\\\/g, "\\");
 
-      // Convert files to data URLs for preview
-      const getDataUrl = (file: File): Promise<string> => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.readAsDataURL(file);
-        });
-      };
+          // Parse the JSON array
+          return JSON.parse(tagsValue);
+        } catch (error) {
+          console.error("Error parsing tags:", error);
+          if (typeof articleData.tags === "string") {
+            return articleData.tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter((tag) => tag.length > 0);
+          }
+        }
+      }
+    }
+    // Always start with empty tags for new articles
+    return [];
+  };
 
-      const chartDataUrl = await getDataUrl(chartImage);
-      const diagramDataUrl = await getDataUrl(diagramImage);
+  const [tagsList, setTagsList] = useState<string[]>([]);
 
-      // TEST DATA - Sample content blocks with generated images
-      // Remove all these blocks in production - should start empty
-      const blocksWithImages = [
-        {
-          id: "1",
-          type: "text",
-          content: {
-            text: "La tecnología está avanzando a un ritmo sin precedentes, transformando la manera en que las empresas operan y los consumidores interactúan con los servicios digitales.", // TEST CONTENT
-            fontSize: 16,
-            fontWeight: "normal",
-            textAlign: "left",
-          },
-        },
-        {
-          id: "2",
-          type: "image",
-          content: {
-            url: chartDataUrl,
-            alt: "Gráfico de crecimiento tecnológico", // TEST CONTENT
-            caption: "Evolución del sector tecnológico en los últimos años", // TEST CONTENT
-            uploadMode: "upload",
-            file: chartImage, // TEST FILE - Canvas generated
-          },
-        },
-        {
-          id: "3",
-          type: "text",
-          content: {
-            text: "En este artículo analizaremos las principales tendencias que están marcando el futuro del sector tecnológico en América Latina.", // TEST CONTENT
-            fontSize: 16,
-            fontWeight: "normal",
-            textAlign: "left",
-          },
-        },
-        {
-          id: "4",
-          type: "quote",
-          content: {
-            text: "La transformación digital no es solo una opción, es una necesidad imperativa para mantenerse competitivo en el mercado actual.", // TEST CONTENT
-            author: "Ana García", // TEST AUTHOR
-            source: "CEO Tech Innovations", // TEST SOURCE
-            fontSize: 18,
-            textAlign: "center",
-          },
-        },
-        {
-          id: "5",
-          type: "image",
-          content: {
-            url: diagramDataUrl,
-            alt: "Diagrama del proceso de innovación digital", // TEST CONTENT
-            caption:
-              "Proceso completo de implementación de innovaciones digitales", // TEST CONTENT
-            uploadMode: "upload",
-            file: diagramImage, // TEST FILE - Canvas generated
-          },
-        },
-        {
-          id: "6",
-          type: "text",
-          content: {
-            text: "Las empresas que han adoptado estas tecnologías han reportado incrementos significativos en su productividad y satisfacción del cliente.", // TEST CONTENT
-            fontSize: 16,
-            fontWeight: "normal",
-            textAlign: "left",
-          },
-        },
-      ];
+  // Fetch article data when in edit mode
+  React.useEffect(() => {
+    if (isEditMode && articleId && !currentArticle) {
+      console.log("Fetching article for editing:", articleId);
+      dispatch(fetchArticleById(articleId));
+    }
+  }, [isEditMode, articleId, currentArticle, dispatch]);
 
-      setContentBlocks(blocksWithImages);
-    };
+  // Update form data when article is loaded in edit mode
+  React.useEffect(() => {
+    if (isEditMode && currentArticle && categories.length > 0) {
+      console.log("Populating form with article data:", currentArticle);
+      console.log("Available categories:", categories);
 
-    createContentBlocksWithImages(); // TEST FUNCTION - Remove in production
-  }, []); // TODO: Remove entire useEffect in production
+      // Cast to any to access the new API response fields
+      const articleData = currentArticle as any;
+
+      // Parse tags from the new API format
+      let parsedTags: string[] = [];
+      let tagsString = "";
+
+      if (articleData.tags) {
+        try {
+          // The tags come as a JSON string like "\"[\\\"tecnología\\\",\\\"innovación\\\",\\\"digital\\\"]\""
+          let tagsValue = articleData.tags;
+
+          // Remove extra quotes if present
+          if (
+            typeof tagsValue === "string" &&
+            tagsValue.startsWith('"') &&
+            tagsValue.endsWith('"')
+          ) {
+            tagsValue = tagsValue.slice(1, -1);
+          }
+
+          // Unescape the JSON string
+          tagsValue = tagsValue.replace(/\\\"/g, '"').replace(/\\\\/g, "\\");
+
+          // Parse the JSON array
+          parsedTags = JSON.parse(tagsValue);
+          tagsString = parsedTags.join(", ");
+
+          console.log("Parsed tags:", parsedTags);
+        } catch (error) {
+          console.error(
+            "Error parsing tags:",
+            error,
+            "Raw tags:",
+            articleData.tags,
+          );
+          // Fallback to handling as string
+          if (typeof articleData.tags === "string") {
+            parsedTags = articleData.tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter((tag) => tag.length > 0);
+            tagsString = parsedTags.join(", ");
+          }
+        }
+      }
+
+      // Use category_id directly since the API now returns the ID
+      const categoryId = articleData.category_id?.toString() || "";
+
+      console.log("Category from API:", {
+        category_id: articleData.category_id,
+        categoryId,
+      });
+
+      setArticleData({
+        title: articleData.title || "",
+        content: articleData.content || "",
+        excerpt: articleData.excerpt || "",
+        category: categoryId,
+        tags: "",
+        image_url: articleData.featured_image_url || "",
+        featured_image_caption: articleData.featured_image_caption || "",
+        is_breaking: Boolean(
+          articleData.is_breaking_news || articleData.is_breaking,
+        ),
+        is_trending: Boolean(articleData.is_trending),
+        publish_datetime: "",
+        seo_title: articleData.meta_title || articleData.title || "",
+        seo_description:
+          articleData.meta_description || articleData.excerpt || "",
+        seo_keywords: articleData.meta_keywords || tagsString,
+      });
+
+      console.log("Set article data with category:", categoryId);
+
+      // Set tags list
+      setTagsList(parsedTags);
+
+      // Parse content blocks if they exist in the article
+      if (articleData.content) {
+        try {
+          console.log("Processing content from API:", articleData.content);
+
+          let blocks = [];
+
+          // Check if there's a content_blocks field in the response
+          if (articleData.content_blocks) {
+            try {
+              console.log(
+                "Found content_blocks in article:",
+                articleData.content_blocks,
+              );
+              blocks = JSON.parse(articleData.content_blocks);
+              console.log("Parsed content blocks:", blocks);
+            } catch (parseError) {
+              console.error("Error parsing content_blocks JSON:", parseError);
+              // Fall back to creating text block from content
+              blocks = [
+                {
+                  id: "1",
+                  type: "text",
+                  content: {
+                    text: articleData.content.replace(/<[^>]*>/g, ""), // Remove HTML tags for editing
+                    fontSize: 16,
+                    fontWeight: "normal",
+                    textAlign: "left",
+                  },
+                },
+              ];
+            }
+          } else {
+            // No content_blocks found, create from HTML content
+            console.log("No content_blocks found, creating from HTML content");
+            if (articleData.content.trim()) {
+              // Check if content has meaningful HTML or just empty paragraphs
+              const contentWithoutEmptyTags = articleData.content
+                .replace(/<p><\/p>/g, "")
+                .replace(/<p>\s*<\/p>/g, "")
+                .replace(/<blockquote><\/blockquote>/g, "")
+                .trim();
+
+              if (contentWithoutEmptyTags) {
+                blocks = [
+                  {
+                    id: "1",
+                    type: "text",
+                    content: {
+                      text: articleData.content.replace(/<[^>]*>/g, ""), // Remove HTML tags for editing
+                      fontSize: 16,
+                      fontWeight: "normal",
+                      textAlign: "left",
+                    },
+                  },
+                ];
+              }
+            }
+          }
+
+          console.log("Setting content blocks:", blocks);
+          setContentBlocks(blocks);
+        } catch (error) {
+          console.error("Error parsing content blocks:", error);
+          setContentBlocks([]);
+        }
+      } else {
+        setContentBlocks([]);
+      }
+    }
+  }, [isEditMode, currentArticle, categories]); // Add categories to dependencies
+
+  // Update image upload mode when article is loaded
+  React.useEffect(() => {
+    if (isEditMode && currentArticle?.featured_image_url) {
+      setImageUploadMode("url");
+    }
+  }, [isEditMode, currentArticle]);
+
   const [showPreview, setShowPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize image upload mode based on edit mode and article data
+  const getInitialImageUploadMode = (): "url" | "upload" => {
+    if (isEditMode && currentArticle) {
+      const articleData = currentArticle as any;
+      if (articleData.featured_image_url) {
+        return "url";
+      }
+    }
+    if (!isEditMode) {
+      return "url"; // Default for new articles
+    }
+    return "url"; // Default fallback
+  };
+
   const [imageUploadMode, setImageUploadMode] = useState<"url" | "upload">(
-    "upload", // TODO: REMOVE - Changed to upload mode for testing, should default to "url" in production
+    getInitialImageUploadMode,
   );
   const [uploadedImageFile, setUploadedImageFile] = useState<File | null>(null);
-
-  // TODO: REMOVE - Create a sample image file for testing only
-  // This entire useEffect should be removed in production
-  React.useEffect(() => {
-    // Create a sample blob image for testing
-    const createSampleImageFile = () => {
-      // Create a canvas with sample content
-      const canvas = document.createElement("canvas");
-      canvas.width = 800;
-      canvas.height = 400;
-      const ctx = canvas.getContext("2d");
-
-      if (ctx) {
-        // Create a gradient background
-        const gradient = ctx.createLinearGradient(0, 0, 800, 400);
-        gradient.addColorStop(0, "#667eea");
-        gradient.addColorStop(1, "#764ba2");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 800, 400);
-
-        // Add text
-        ctx.fillStyle = "white";
-        ctx.font = "bold 48px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("Sample Featured Image", 400, 200); // TEST TEXT
-        ctx.font = "24px Arial";
-        ctx.fillText("Technology & Innovation", 400, 250); // TEST TEXT
-
-        // Convert canvas to blob
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const file = new File([blob], "sample-featured-image.png", {
-                type: "image/png",
-              }); // TEST FILE
-              setUploadedImageFile(file);
-
-              // Create preview URL
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                const result = e.target?.result as string;
-                setArticleData((prev) => ({ ...prev, image_url: result })); // TEST DATA
-              };
-              reader.readAsDataURL(file);
-            }
-          },
-          "image/png",
-          0.8,
-        );
-      }
-    };
-
-    createSampleImageFile(); // TEST FUNCTION - Remove in production
-  }, []); // TODO: Remove entire useEffect in production
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setArticleData((prev) => ({
@@ -694,16 +822,94 @@ export default function NewArticle() {
 
       console.log("Article params to send:", articleParams);
 
-      const result = await dispatch(insertArticle(articleParams));
+      let result;
+      if (isEditMode && currentArticle) {
+        // Prepare content images for upload (same as create)
+        const contentImages: { [key: string]: File } = {};
+        contentBlocks.forEach((block, idx) => {
+          if (
+            block.type === "image" &&
+            block.content &&
+            block.content.file instanceof File
+          ) {
+            contentImages[`content_image_${idx}`] = block.content.file;
+          }
+        });
 
-      if (insertArticle.fulfilled.match(result)) {
-        console.log("Article published successfully:", result.payload);
-        // Navigate to author dashboard or show success message
-        navigate("/author/dashboard");
+        // Update existing article - use UpdateArticleParams interface
+        const updateParams: UpdateArticleParams = {
+          id: currentArticle.id.toString(),
+          title: articleData.title,
+          slug: slug,
+          excerpt: articleData.excerpt,
+          content: htmlContent,
+          content_blocks: JSON.stringify(contentBlocks),
+          category_id: categoryId,
+          meta_title: articleData.seo_title,
+          meta_description: articleData.seo_description,
+          meta_keywords: articleData.seo_keywords,
+          canonical_url: "",
+          featured_image_caption: articleData.featured_image_caption,
+          gallery: "",
+          status: "published",
+          published_at: new Date().toISOString(),
+          scheduled_at: articleData.publish_datetime || null,
+          is_featured: false,
+          is_trending: articleData.is_trending,
+          is_breaking_news: articleData.is_breaking,
+          is_editors_pick: false,
+          tags: tagsList,
+          external_source: "",
+          language: "es",
+          featured_image:
+            imageUploadMode === "upload" && uploadedImageFile
+              ? uploadedImageFile
+              : undefined,
+          content_images:
+            Object.keys(contentImages).length > 0 ? contentImages : undefined,
+          image_url:
+            imageUploadMode === "url" && articleData.image_url
+              ? articleData.image_url
+              : undefined,
+        };
+
+        console.log("Update params to send:", updateParams);
+        result = await dispatch(updateArticle(updateParams));
+
+        if (updateArticle.fulfilled.match(result)) {
+          console.log("Article updated successfully:", result.payload);
+
+          // Refresh articles list in dashboard if user is available
+          if (user?.id) {
+            await dispatch(
+              fetchArticlesByAuthorId({ authorId: user.id.toString() }),
+            );
+          }
+
+          navigate("/author/dashboard");
+        } else {
+          console.error("Error updating article:", result.payload);
+          alert(`Error: ${result.payload}`);
+        }
       } else {
-        console.error("Error publishing article:", result.payload);
-        // Handle error (show notification, etc.)
-        alert(`Error: ${result.payload}`);
+        // Create new article
+        result = await dispatch(insertArticle(articleParams));
+
+        if (insertArticle.fulfilled.match(result)) {
+          console.log("Article published successfully:", result.payload);
+
+          // Refresh articles list in dashboard if user is available
+          if (user?.id) {
+            await dispatch(
+              fetchArticlesByAuthorId({ authorId: user.id.toString() }),
+            );
+          }
+
+          navigate("/author/dashboard");
+        } else {
+          console.error("Error publishing article:", result.payload);
+          alert(`Error: ${result.payload}`);
+        }
       }
     } catch (error) {
       console.error("Error publishing article:", error);
@@ -919,6 +1125,31 @@ export default function NewArticle() {
     );
   }
 
+  // Show loading when in edit mode and article is being fetched
+  if (isEditMode && articlesLoading && !currentArticle) {
+    return (
+      <Layout>
+        <div className="new-article__loading">
+          <p>Cargando artículo...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Show error if article not found in edit mode
+  if (isEditMode && !articlesLoading && !currentArticle && articleId) {
+    return (
+      <Layout>
+        <div className="new-article__loading">
+          <p>Artículo no encontrado.</p>
+          <Button onClick={() => navigate("/author/dashboard")}>
+            Volver al Dashboard
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout showBreakingNews={false}>
       <div className="new-article">
@@ -934,7 +1165,9 @@ export default function NewArticle() {
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Volver al Dashboard
               </Button>
-              <h1 className="new-article__title">Crear Nuevo Artículo</h1>
+              <h1 className="new-article__title">
+                {isEditMode ? "Editar Artículo" : "Crear Nuevo Artículo"}
+              </h1>
             </div>
             <div className="new-article__header-actions">
               <Button
@@ -964,8 +1197,12 @@ export default function NewArticle() {
                 disabled={isSubmitting || articlesLoading}
               >
                 {isSubmitting || articlesLoading
-                  ? "Publicando..."
-                  : "Publicar Artículo"}
+                  ? isEditMode
+                    ? "Actualizando..."
+                    : "Publicando..."
+                  : isEditMode
+                    ? "Actualizar Artículo"
+                    : "Publicar Artículo"}
               </Button>
             </div>
           </div>
@@ -1023,10 +1260,22 @@ export default function NewArticle() {
                     <Label htmlFor="content" className="new-article__label">
                       Contenido del Artículo *
                     </Label>
-                    <RichContentEditor
-                      initialContent={contentBlocks}
-                      onChange={setContentBlocks}
-                    />
+                    <div>
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "#666",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Debug: Content blocks length: {contentBlocks.length}
+                      </p>
+                      <RichContentEditor
+                        key={`editor-${contentBlocks.length}-${currentArticle?.id || "new"}`} // Force re-render
+                        initialContent={contentBlocks}
+                        onChange={setContentBlocks}
+                      />
+                    </div>
                     {errors.content && (
                       <span className="text-red-500 text-sm">
                         {errors.content}
@@ -1138,28 +1387,40 @@ export default function NewArticle() {
                     <Label htmlFor="category" className="new-article__label">
                       Categoría *
                     </Label>
-                    <Select
-                      value={articleData.category}
-                      onValueChange={(value) =>
-                        handleInputChange("category", value)
-                      }
-                    >
-                      <SelectTrigger
-                        className={`new-article__select ${errors.category ? "border-red-500" : ""}`}
+                    <div>
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "#666",
+                          marginBottom: "8px",
+                        }}
                       >
-                        <SelectValue placeholder="Selecciona una categoría" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem
-                            key={category.id}
-                            value={String(category.id)}
-                          >
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        Debug: Current category: "{articleData.category}",
+                        Categories loaded: {categories.length}
+                      </p>
+                      <Select
+                        value={articleData.category}
+                        onValueChange={(value) =>
+                          handleInputChange("category", value)
+                        }
+                      >
+                        <SelectTrigger
+                          className={`new-article__select ${errors.category ? "border-red-500" : ""}`}
+                        >
+                          <SelectValue placeholder="Selecciona una categoría" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem
+                              key={category.id}
+                              value={String(category.id)}
+                            >
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     {errors.category && (
                       <span className="text-red-500 text-sm">
                         {errors.category}

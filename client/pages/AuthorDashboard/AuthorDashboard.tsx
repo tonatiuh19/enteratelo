@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { logoutUser } from "@/store/actions/authActions";
-import { fetchArticlesByAuthorId } from "@/store/actions/articlesActions";
+import {
+  fetchArticlesByAuthorId,
+  hideArticle,
+} from "@/store/actions/articlesActions";
 import {
   selectUser,
   selectIsAuthenticated,
@@ -28,6 +31,7 @@ import {
   Eye,
   Edit,
   LogOut,
+  Trash,
   Globe,
   Twitter,
   Instagram,
@@ -35,9 +39,12 @@ import {
   Facebook,
 } from "lucide-react";
 import "./AuthorDashboard.css";
+import { formatSpanishDate } from "@/lib/utils";
 
 export default function AuthorDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [showHideModal, setShowHideModal] = useState(false);
+  const [articleToHide, setArticleToHide] = useState(null);
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -78,6 +85,32 @@ export default function AuthorDashboard() {
   const handleLogout = () => {
     dispatch(logoutUser());
     navigate("/");
+  };
+
+  const handleHideArticle = async () => {
+    if (!articleToHide) return;
+
+    try {
+      // Dispatch the hideArticle action
+      const result = await dispatch(hideArticle(articleToHide.id));
+
+      if (hideArticle.fulfilled.match(result)) {
+        // Success - optionally refetch articles to ensure UI is up to date
+        const authorId = user.user_id?.toString() || user.id?.toString();
+        if (authorId) {
+          dispatch(fetchArticlesByAuthorId({ authorId }));
+        }
+
+        setShowHideModal(false);
+        setArticleToHide(null);
+      } else {
+        // Handle error case
+        throw new Error(result.payload as string);
+      }
+    } catch (error) {
+      console.error("Error hiding article:", error);
+      alert("Error al ocultar el artículo");
+    }
   };
 
   // Calculate stats from user articles
@@ -348,7 +381,9 @@ export default function AuthorDashboard() {
                       {userArticles.map((article) => (
                         <div
                           key={article.id}
-                          className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                          className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
+                            article.is_active === 0 ? "opacity-60" : ""
+                          }`}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -386,38 +421,66 @@ export default function AuthorDashboard() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 ml-4">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  navigate(`/articulo/${article.id}`)
-                                }
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                Ver
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  navigate(`/author/edit-article/${article.id}`)
-                                }
-                              >
-                                <Edit className="h-4 w-4 mr-1" />
-                                Editar
-                              </Button>
+                              {article.is_active === 0 ? (
+                                <Badge
+                                  variant="destructive"
+                                  className="text-xs"
+                                >
+                                  No visible
+                                </Badge>
+                              ) : (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      navigate(`/articulo/${article.slug}`)
+                                    }
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    Ver
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      navigate(
+                                        `/author/edit-article/${article.id}`,
+                                      )
+                                    }
+                                  >
+                                    <Edit className="h-4 w-4 mr-1" />
+                                    Editar
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setArticleToHide(article);
+                                      setShowHideModal(true);
+                                    }}
+                                  >
+                                    <Trash className="h-4 w-4 mr-1" />
+                                    Ocultar
+                                  </Button>
+                                </>
+                              )}
                             </div>
                           </div>
                           <div className="mt-3 pt-3 border-t text-xs text-gray-500">
-                            Publicado el{" "}
-                            {new Date(article.publishedAt).toLocaleDateString(
-                              "es-ES",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              },
-                            )}
+                            Publicado el {formatSpanishDate(article.created_at)}
+                            {article.updated_at &&
+                              article.updated_at !== article.created_at &&
+                              new Date(article.updated_at.replace(" ", "T")) >
+                                new Date(
+                                  article.created_at.replace(" ", "T"),
+                                ) && (
+                                <>
+                                  {" • "}
+                                  Editado el{" "}
+                                  {formatSpanishDate(article.updated_at)}
+                                </>
+                              )}
                           </div>
                         </div>
                       ))}
@@ -484,6 +547,33 @@ export default function AuthorDashboard() {
           </Tabs>
         </div>
       </div>
+
+      {/* Hide Article Confirmation Modal */}
+      {showHideModal && articleToHide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h2 className="text-xl font-semibold mb-4">¿Ocultar artículo?</h2>
+            <p className="text-gray-600 mb-6">
+              Si ocultas "<strong>{articleToHide.title}</strong>", no será
+              visible para los lectores hasta que lo publiques de nuevo.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowHideModal(false);
+                  setArticleToHide(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={handleHideArticle}>
+                Ocultar Artículo
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

@@ -3,11 +3,13 @@ import { ArticlesState, Article } from "../state/types";
 import {
   fetchArticles,
   fetchArticleById,
+  fetchArticleBySlug,
   fetchArticlesByAuthorId,
   createArticle,
   updateArticle,
   deleteArticle,
   insertArticle,
+  hideArticle,
 } from "../actions/articlesActions";
 
 const initialState: ArticlesState = {
@@ -80,6 +82,20 @@ const articlesSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
+      // Fetch article by slug
+      .addCase(fetchArticleBySlug.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchArticleBySlug.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.currentArticle = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchArticleBySlug.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
       // Fetch articles by author ID
       .addCase(fetchArticlesByAuthorId.pending, (state) => {
         state.isLoading = true;
@@ -110,16 +126,31 @@ const articlesSlice = createSlice({
         state.error = action.payload as string;
       })
       // Update article
+      .addCase(updateArticle.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(updateArticle.fulfilled, (state, action) => {
-        const index = state.articles.findIndex(
-          (article) => article.id === action.payload.id,
-        );
-        if (index !== -1) {
-          state.articles[index] = action.payload;
+        state.isLoading = false;
+        state.error = null;
+        // Handle the new response structure with nested article
+        if (action.payload.success && action.payload.article) {
+          const updatedArticle = action.payload.article;
+          const index = state.articles.findIndex(
+            (article) => article.id === updatedArticle.id,
+          );
+          if (index !== -1) {
+            state.articles[index] = updatedArticle;
+          }
+          if (state.currentArticle?.id === updatedArticle.id) {
+            state.currentArticle = updatedArticle;
+          }
+          // Note: Articles will be refreshed via fetchArticlesByAuthorId dispatch in component
         }
-        if (state.currentArticle?.id === action.payload.id) {
-          state.currentArticle = action.payload;
-        }
+      })
+      .addCase(updateArticle.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       })
       // Delete article
       .addCase(deleteArticle.fulfilled, (state, action) => {
@@ -144,6 +175,30 @@ const articlesSlice = createSlice({
         }
       })
       .addCase(insertArticle.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      // Hide article
+      .addCase(hideArticle.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(hideArticle.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+        // Update the article status in the articles array
+        const articleIndex = state.articles.findIndex(
+          (article) => article.id === action.payload.articleId,
+        );
+        if (articleIndex !== -1) {
+          state.articles[articleIndex].status = "archived";
+        }
+        // Update current article if it's the one being hidden
+        if (state.currentArticle?.id === action.payload.articleId) {
+          state.currentArticle.status = "archived";
+        }
+      })
+      .addCase(hideArticle.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

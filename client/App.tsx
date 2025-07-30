@@ -7,6 +7,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { StoreProvider } from "./store/StoreProvider";
+import { AuthProvider } from "./hooks/use-auth";
 import { AppInitializer } from "./components/AppInitializer/AppInitializer";
 import { ProtectedRoute } from "./components/ProtectedRoute/ProtectedRoute";
 import {
@@ -22,46 +23,56 @@ import {
 
 const App = () => (
   <StoreProvider>
-    <TooltipProvider>
-      <BrowserRouter>
-        <AppInitializer>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/categoria/:categoryId" element={<CategoryPage />} />
-            <Route path="/articulo/:articleId" element={<ArticlePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route
-              path="/author/dashboard"
-              element={
-                <ProtectedRoute>
-                  <AuthorDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/author/new-article"
-              element={
-                <ProtectedRoute>
-                  <NewArticle />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/author/profile"
-              element={
-                <ProtectedRoute>
-                  <AuthorProfile />
-                </ProtectedRoute>
-              }
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </AppInitializer>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AppInitializer>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/categoria/:categoryId" element={<CategoryPage />} />
+              <Route path="/articulo/:slug" element={<ArticlePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route
+                path="/author/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <AuthorDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/author/new-article"
+                element={
+                  <ProtectedRoute>
+                    <NewArticle />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/author/edit-article/:articleId"
+                element={
+                  <ProtectedRoute>
+                    <NewArticle />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/author/profile"
+                element={
+                  <ProtectedRoute>
+                    <AuthorProfile />
+                  </ProtectedRoute>
+                }
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </AppInitializer>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </StoreProvider>
 );
 

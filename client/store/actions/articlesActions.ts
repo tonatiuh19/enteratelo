@@ -38,6 +38,35 @@ const mockArticles: Article[] = [
   // Add more mock articles as needed
 ];
 
+// Fetch Article by Slug with real API call
+export const fetchArticleBySlug = createAsyncThunk(
+  "articles/fetchArticleBySlug",
+  async (slug: string, { rejectWithValue }) => {
+    try {
+      console.log("Fetching article by slug:", slug);
+
+      const response = await axios.post(`${DOMAIN}/getArticleBySlug.php`, {
+        slug: slug,
+      });
+
+      console.log("Fetch article by slug response:", response.data);
+
+      if (response.data.success) {
+        return response.data.article;
+      } else {
+        return rejectWithValue(response.data.error || "Artículo no encontrado");
+      }
+    } catch (error: any) {
+      console.error("Error fetching article by slug:", error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+          error.message ||
+          "Error al obtener artículo",
+      );
+    }
+  },
+);
+
 export const fetchArticles = createAsyncThunk(
   "articles/fetchArticles",
   async (params: FetchArticlesParams = {}, { rejectWithValue }) => {
@@ -96,18 +125,39 @@ export const fetchArticleById = createAsyncThunk(
   "articles/fetchArticleById",
   async (articleId: string, { rejectWithValue }) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      console.log("Fetching article by ID:", articleId);
 
-      const article = mockArticles.find((article) => article.id === articleId);
+      const response = await axios.post(
+        `${DOMAIN}/getArticleByAuthorId.php`,
+        {
+          article_id: articleId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
 
-      if (!article) {
-        throw new Error("Artículo no encontrado");
+      console.log("Article by ID response:", response.data);
+
+      if (response.data.success) {
+        if (!response.data.article) {
+          return rejectWithValue("Artículo no encontrado");
+        }
+        return response.data.article;
+      } else {
+        return rejectWithValue(
+          response.data.error || "Error al cargar artículo",
+        );
       }
-
-      return article;
     } catch (error: any) {
-      return rejectWithValue(error.message || "Error al cargar artículo");
+      console.error("Error fetching article by ID:", error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+          error.message ||
+          "Error al cargar artículo",
+      );
     }
   },
 );
@@ -181,25 +231,132 @@ export const createArticle = createAsyncThunk(
   },
 );
 
+// Update Article with real API call
+export interface UpdateArticleParams {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  content_blocks: string;
+  category_id: number;
+  meta_title: string;
+  meta_description: string;
+  meta_keywords: string;
+  canonical_url?: string;
+  featured_image_caption?: string;
+  gallery?: string;
+  status: string;
+  published_at?: string;
+  scheduled_at?: string;
+  is_featured: boolean;
+  is_trending: boolean;
+  is_breaking_news: boolean;
+  is_editors_pick: boolean;
+  tags: string[];
+  external_source?: string;
+  language?: string;
+  featured_image?: File;
+  content_images?: { [key: string]: File };
+  image_url?: string;
+}
+
 export const updateArticle = createAsyncThunk(
   "articles/updateArticle",
-  async (
-    articleData: Partial<Article> & { id: string },
-    { rejectWithValue },
-  ) => {
+  async (articleData: UpdateArticleParams, { rejectWithValue, getState }) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Updating article with data:", articleData);
 
-      const updatedArticle: Article = {
-        ...mockArticles.find((a) => a.id === articleData.id)!,
-        ...articleData,
-        updatedAt: new Date().toISOString(),
-      };
+      // Create FormData for multipart request
+      const formData = new FormData();
 
-      return updatedArticle;
+      // Add article ID
+      formData.append("id", articleData.id);
+
+      // Add basic article data with null checking
+      formData.append("title", articleData.title || "");
+      formData.append("slug", articleData.slug || "");
+      formData.append("excerpt", articleData.excerpt || "");
+      formData.append("content", articleData.content || "");
+      formData.append("content_blocks", articleData.content_blocks || "[]");
+      formData.append(
+        "category_id",
+        articleData.category_id?.toString() || "0",
+      );
+      formData.append("meta_title", articleData.meta_title || "");
+      formData.append("meta_description", articleData.meta_description || "");
+      formData.append("meta_keywords", articleData.meta_keywords || "");
+      formData.append("canonical_url", articleData.canonical_url || "");
+      formData.append(
+        "featured_image_caption",
+        articleData.featured_image_caption || "",
+      );
+      formData.append("gallery", articleData.gallery || "[]");
+      formData.append("status", articleData.status || "published");
+      formData.append("published_at", articleData.published_at || "");
+      formData.append("scheduled_at", articleData.scheduled_at || "");
+      formData.append("is_featured", articleData.is_featured ? "1" : "0");
+      formData.append("is_trending", articleData.is_trending ? "1" : "0");
+      formData.append(
+        "is_breaking_news",
+        articleData.is_breaking_news ? "1" : "0",
+      );
+      formData.append(
+        "is_editors_pick",
+        articleData.is_editors_pick ? "1" : "0",
+      );
+      formData.append("tags", JSON.stringify(articleData.tags || []));
+      formData.append("external_source", articleData.external_source || "");
+      formData.append("language", articleData.language || "es");
+
+      console.log("FormData entries for update:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, ":", value);
+      }
+
+      // Add image URL if provided (for URL mode)
+      if (articleData.image_url) {
+        formData.append("image_url", articleData.image_url);
+      }
+
+      // Add featured image file if provided (for upload mode)
+      if (articleData.featured_image) {
+        formData.append("featured_image", articleData.featured_image);
+      }
+
+      // Add content images if provided
+      if (articleData.content_images) {
+        Object.entries(articleData.content_images).forEach(([key, file]) => {
+          formData.append(key, file);
+        });
+      }
+
+      const response = await axios.post(`${DOMAIN}/editArticle.php`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("Edit article response:", response.data);
+
+      if (response.data.success) {
+        return {
+          success: true,
+          article: response.data.article,
+          message: "Artículo actualizado exitosamente",
+        };
+      } else {
+        return rejectWithValue(
+          response.data.error || "Error al actualizar artículo",
+        );
+      }
     } catch (error: any) {
-      return rejectWithValue(error.message || "Error al actualizar artículo");
+      console.error("Error updating article:", error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+          error.message ||
+          "Error al actualizar artículo",
+      );
     }
   },
 );
@@ -356,6 +513,48 @@ export const insertArticle = createAsyncThunk(
         error.response?.data?.error ||
           error.message ||
           "Error al insertar artículo",
+      );
+    }
+  },
+);
+
+export const hideArticle = createAsyncThunk(
+  "articles/hideArticle",
+  async (articleId: string, { rejectWithValue }) => {
+    try {
+      console.log("Hiding article with ID:", articleId);
+
+      const response = await axios.post(
+        `${DOMAIN}/hideArticle.php`,
+        {
+          id: articleId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      console.log("Hide article response:", response.data);
+
+      if (response.data.success) {
+        return {
+          success: true,
+          articleId: articleId,
+          message: "Artículo ocultado exitosamente",
+        };
+      } else {
+        return rejectWithValue(
+          response.data.error || "Error al ocultar artículo",
+        );
+      }
+    } catch (error: any) {
+      console.error("Error hiding article:", error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+          error.message ||
+          "Error al ocultar artículo",
       );
     }
   },
