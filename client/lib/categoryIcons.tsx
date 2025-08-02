@@ -23,7 +23,7 @@ import {
 
 /**
  * Get React Icon component based on category icon
- * @param iconClass - The icon class or category name
+ * @param iconClass - The icon class, category name, or category slug
  * @param className - CSS classes to apply to the icon
  * @returns JSX.Element - React Icon component
  */
@@ -87,9 +87,46 @@ export const getCategoryIcon = (
     Education: <FaGraduationCap className={className} />,
     Finanzas: <FaDollarSign className={className} />,
     Finance: <FaDollarSign className={className} />,
+
+    // Category slug mappings (common slugs)
+    tecnologia: <FaLaptopCode className={className} />,
+    technology: <FaLaptopCode className={className} />,
+    tech: <FaLaptopCode className={className} />,
+    entretenimiento: <FaFilm className={className} />,
+    entertainment: <FaFilm className={className} />,
+    salud: <FaHeartbeat className={className} />,
+    health: <FaHeartbeat className={className} />,
+    ciencia: <FaFlask className={className} />,
+    science: <FaFlask className={className} />,
+    cultura: <FaTheaterMasks className={className} />,
+    culture: <FaTheaterMasks className={className} />,
+    internacional: <FaGlobe className={className} />,
+    international: <FaGlobe className={className} />,
+    nacional: <FaFlag className={className} />,
+    national: <FaFlag className={className} />,
+    local: <FaMapMarkerAlt className={className} />,
+    deportes: <FaFutbol className={className} />,
+    sports: <FaFutbol className={className} />,
+    gaming: <FaGamepad className={className} />,
+    juegos: <FaGamepad className={className} />,
+    musica: <FaMusic className={className} />,
+    music: <FaMusic className={className} />,
+    fotografia: <FaCamera className={className} />,
+    photography: <FaCamera className={className} />,
+    automoviles: <FaCar className={className} />,
+    cars: <FaCar className={className} />,
+    hogar: <FaHome className={className} />,
+    home: <FaHome className={className} />,
+    comida: <FaUtensils className={className} />,
+    food: <FaUtensils className={className} />,
+    educacion: <FaGraduationCap className={className} />,
+    education: <FaGraduationCap className={className} />,
+    finanzas: <FaDollarSign className={className} />,
+    finance: <FaDollarSign className={className} />,
+    general: <FaNewspaper className={className} />,
   };
 
-  // If it's a Font Awesome class or category name, use the mapping
+  // If it's a Font Awesome class, category name, or slug, use the mapping
   if (iconClass && iconMap[iconClass]) {
     return iconMap[iconClass];
   }

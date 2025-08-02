@@ -15,28 +15,36 @@ export interface FetchArticlesByAuthorParams {
   authorId: string;
 }
 
-// Mock data service
-const mockArticles: Article[] = [
-  {
-    id: "1",
-    title: "El Futuro de la Tecnología en América Latina",
-    slug: "futuro-tecnologia-america-latina",
-    content: "Contenido del artículo...",
-    excerpt:
-      "Un análisis profundo sobre las tendencias tecnológicas en la región.",
-    authorId: "author1",
-    authorName: "Ana García",
-    category: "technology",
-    tags: ["tecnología", "américa latina", "innovación"],
-    imageUrl: "/placeholder.svg",
-    publishedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    status: "published",
-    viewCount: 1250,
-    featured: true,
+// Fetch homepage articles (carousel, latest, trending, editors_picks)
+export const fetchHomepageArticles = createAsyncThunk(
+  "articles/fetchHomepageArticles",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${DOMAIN}/getHomepageArticles.php`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+      if (response.data.success) {
+        return response.data;
+      } else {
+        return rejectWithValue(
+          response.data.error || "Error al cargar artículos de portada",
+        );
+      }
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.error ||
+          error.message ||
+          "Error al cargar artículos de portada",
+      );
+    }
   },
-  // Add more mock articles as needed
-];
+);
 
 // Fetch Article by Slug with real API call
 export const fetchArticleBySlug = createAsyncThunk(
@@ -105,52 +113,38 @@ export const fetchArticles = createAsyncThunk(
   "articles/fetchArticles",
   async (params: FetchArticlesParams = {}, { rejectWithValue }) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Fetching articles with params:", params);
 
-      const { page = 1, limit = 10, category, author, search } = params;
-
-      let filteredArticles = [...mockArticles];
-
-      // Apply filters
-      if (category) {
-        filteredArticles = filteredArticles.filter(
-          (article) => article.category === category,
-        );
-      }
-
-      if (author) {
-        filteredArticles = filteredArticles.filter(
-          (article) => article.authorId === author,
-        );
-      }
-
-      if (search) {
-        filteredArticles = filteredArticles.filter(
-          (article) =>
-            article.title.toLowerCase().includes(search.toLowerCase()) ||
-            article.content.toLowerCase().includes(search.toLowerCase()),
-        );
-      }
-
-      // Pagination
-      const startIndex = (page - 1) * limit;
-      const paginatedArticles = filteredArticles.slice(
-        startIndex,
-        startIndex + limit,
-      );
-
-      return {
-        articles: paginatedArticles,
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(filteredArticles.length / limit),
-          totalItems: filteredArticles.length,
-          itemsPerPage: limit,
+      const response = await axios.post(`${DOMAIN}/getArticles.php`, params, {
+        headers: {
+          "Content-Type": "application/json",
         },
-      };
+      });
+
+      console.log("Fetch articles response:", response.data);
+
+      if (response.data.success) {
+        return {
+          articles: response.data.articles || [],
+          pagination: response.data.pagination || {
+            currentPage: 1,
+            totalPages: 1,
+            totalItems: 0,
+            itemsPerPage: 10,
+          },
+        };
+      } else {
+        return rejectWithValue(
+          response.data.error || "Error al cargar artículos",
+        );
+      }
     } catch (error: any) {
-      return rejectWithValue(error.message || "Error al cargar artículos");
+      console.error("Error fetching articles:", error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+          error.message ||
+          "Error al cargar artículos",
+      );
     }
   },
 );
@@ -239,28 +233,106 @@ export const fetchArticlesByAuthorId = createAsyncThunk(
 
 export const createArticle = createAsyncThunk(
   "articles/createArticle",
-  async (
-    articleData: Omit<
-      Article,
-      "id" | "publishedAt" | "updatedAt" | "viewCount"
-    >,
-    { rejectWithValue },
-  ) => {
+  async (articleData: InsertArticleParams, { rejectWithValue, getState }) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const state = getState() as RootState;
+      const user = state.auth.user;
 
-      const newArticle: Article = {
-        ...articleData,
-        id: Math.random().toString(36).substr(2, 9),
-        publishedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        viewCount: 0,
-      };
+      if (!user || (!user.id && !user.user_id)) {
+        return rejectWithValue("Usuario no autenticado");
+      }
 
-      return newArticle;
+      // Get author_id - prefer user_id if available, fallback to id
+      const authorId = user.user_id || parseInt(user.id) || 0;
+      if (!authorId) {
+        return rejectWithValue("No se pudo obtener el ID del usuario");
+      }
+
+      console.log("Creating article with data:", articleData);
+
+      // Create FormData for multipart request
+      const formData = new FormData();
+
+      // Add basic article data with null checking
+      formData.append("title", articleData.title || "");
+      formData.append("slug", articleData.slug || "");
+      formData.append("excerpt", articleData.excerpt || "");
+      formData.append("content", articleData.content || "");
+      formData.append("content_blocks", articleData.content_blocks || "[]");
+      formData.append(
+        "category_id",
+        articleData.category_id?.toString() || "0",
+      );
+      formData.append("author_id", authorId.toString());
+      formData.append("meta_title", articleData.meta_title || "");
+      formData.append("meta_description", articleData.meta_description || "");
+      formData.append("meta_keywords", articleData.meta_keywords || "");
+      formData.append("canonical_url", articleData.canonical_url || "");
+      formData.append(
+        "featured_image_caption",
+        articleData.featured_image_caption || "",
+      );
+      formData.append("gallery", articleData.gallery || "");
+      formData.append("status", articleData.status || "draft");
+      formData.append("published_at", articleData.published_at || "");
+      formData.append("scheduled_at", articleData.scheduled_at || "");
+      formData.append("is_featured", articleData.is_featured ? "1" : "0");
+      formData.append("is_trending", articleData.is_trending ? "1" : "0");
+      formData.append(
+        "is_breaking_news",
+        articleData.is_breaking_news ? "1" : "0",
+      );
+      formData.append(
+        "is_editors_pick",
+        articleData.is_editors_pick ? "1" : "0",
+      );
+      formData.append("tags", JSON.stringify(articleData.tags || []));
+      formData.append("external_source", articleData.external_source || "");
+      formData.append("language", articleData.language || "es");
+
+      // Add image URL if provided (for URL mode)
+      if (articleData.image_url) {
+        formData.append("image_url", articleData.image_url);
+      }
+
+      // Add featured image file if provided (for upload mode)
+      if (articleData.featured_image) {
+        formData.append("featured_image", articleData.featured_image);
+      }
+
+      // Add content images if provided
+      if (articleData.content_images) {
+        Object.entries(articleData.content_images).forEach(([key, file]) => {
+          formData.append(key, file);
+        });
+      }
+
+      const response = await axios.post(
+        `${DOMAIN}/insertArticle.php`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      console.log("Create article response:", response.data);
+
+      if (response.data.success) {
+        return response.data.article;
+      } else {
+        return rejectWithValue(
+          response.data.error || "Error al crear artículo",
+        );
+      }
     } catch (error: any) {
-      return rejectWithValue(error.message || "Error al crear artículo");
+      console.error("Error creating article:", error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+          error.message ||
+          "Error al crear artículo",
+      );
     }
   },
 );
@@ -399,12 +471,36 @@ export const deleteArticle = createAsyncThunk(
   "articles/deleteArticle",
   async (articleId: string, { rejectWithValue }) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log("Deleting article with ID:", articleId);
 
-      return articleId;
+      const response = await axios.post(
+        `${DOMAIN}/deleteArticle.php`,
+        {
+          id: articleId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      console.log("Delete article response:", response.data);
+
+      if (response.data.success) {
+        return articleId;
+      } else {
+        return rejectWithValue(
+          response.data.error || "Error al eliminar artículo",
+        );
+      }
     } catch (error: any) {
-      return rejectWithValue(error.message || "Error al eliminar artículo");
+      console.error("Error deleting article:", error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+          error.message ||
+          "Error al eliminar artículo",
+      );
     }
   },
 );

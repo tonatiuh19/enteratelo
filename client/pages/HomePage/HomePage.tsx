@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchHomepageArticles } from "@/store/actions/articlesActions";
+import { fetchCategories } from "@/store/actions/categoriesActions";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,34 +34,69 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getCategoryIcon } from "@/lib/categoryIcons";
+import { getImageUrl } from "@/lib/utils";
 import {
-  mockArticles,
-  categories,
   socialPosts,
-  editorsPicks,
-  videoContent,
-  liveUpdates,
   polls,
   liveScores,
+  videoContent,
+  liveUpdates,
 } from "@/services/data.service";
 import { Layout } from "@/components/Layout/Layout";
 import { LatestNews } from "@/components/LatestNews/LatestNews";
 import "./HomePage.css";
 
 export default function HomePage() {
+  const dispatch = useAppDispatch();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [email, setEmail] = useState("");
   const [selectedPollOption, setSelectedPollOption] = useState<string | null>(
     null,
   );
 
-  const featuredArticles = mockArticles.filter((article) => article.featured);
-  const trendingArticles = mockArticles
-    .filter((article) => article.trending)
-    .slice(0, 6);
-  const latestArticles = mockArticles.slice(0, 8);
+  // Fetch homepage articles from store
+  const homepage = useAppSelector((state) => state.articles.homepage);
+  const categories = useAppSelector((state) => state.categories.categories);
+  const isLoading = useAppSelector((state) => state.articles.isLoading);
 
   useEffect(() => {
+    dispatch(fetchHomepageArticles());
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
+  const featuredArticles = homepage.carousel || [];
+  const trendingArticles = homepage.trending || [];
+  const latestArticles = homepage.latest || [];
+  const editorsPicks = homepage.editors_picks || [];
+
+  // Helper function to get category by ID
+  const getCategoryById = (categoryId: string) => {
+    return categories.find((c) => c.id.toString() === categoryId);
+  };
+
+  // Helper function to format article data
+  const formatArticle = (article: any) => ({
+    ...article,
+    imageUrl: getImageUrl(article.featured_image_url),
+    author: article.author_name,
+    authorName: article.author_name,
+    publishedAt: new Date(article.published_at).toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    views: parseInt(article.view_count) || 0,
+    likes: parseInt(article.like_count) || 0,
+    readTime: parseInt(article.estimated_read_time) || 5,
+    featured: article.is_featured === "1",
+    trending: article.is_trending === "1",
+    tags: article.tags ? article.tags.split(",") : [],
+    category: article.category_id.toString(),
+  });
+
+  useEffect(() => {
+    if (featuredArticles.length === 0) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % featuredArticles.length);
     }, 6000);
@@ -92,104 +130,103 @@ export default function HomePage() {
         <section className="home-page__hero">
           <div className="home-page__hero-carousel">
             <div className="home-page__hero-main">
-              {featuredArticles.map((article, index) => (
-                <div
-                  key={article.id}
-                  className={cn(
-                    "home-page__hero-slide",
-                    index === currentSlide
-                      ? "home-page__hero-slide--active"
-                      : index < currentSlide
-                        ? "home-page__hero-slide--prev"
-                        : "home-page__hero-slide--next",
-                  )}
-                >
-                  <div className="home-page__hero-image-container">
-                    <img
-                      src={article.imageUrl}
-                      alt={article.title}
-                      className="home-page__hero-image"
-                    />
-                    <div className="home-page__hero-overlay" />
-                    <div className="home-page__hero-overlay-side" />
+              {featuredArticles.map((article, index) => {
+                const formattedArticle = formatArticle(article);
+                const category = getCategoryById(formattedArticle.category);
+                return (
+                  <div
+                    key={article.id}
+                    className={cn(
+                      "home-page__hero-slide",
+                      index === currentSlide
+                        ? "home-page__hero-slide--active"
+                        : index < currentSlide
+                          ? "home-page__hero-slide--prev"
+                          : "home-page__hero-slide--next",
+                    )}
+                  >
+                    <div className="home-page__hero-image-container">
+                      <img
+                        src={formattedArticle.imageUrl}
+                        alt={formattedArticle.title}
+                        className="home-page__hero-image"
+                      />
+                      <div className="home-page__hero-overlay" />
+                      <div className="home-page__hero-overlay-side" />
 
-                    {/* Content Overlay */}
-                    <div className="home-page__hero-content">
-                      <div className="home-page__hero-content-wrapper">
-                        <Badge
-                          className={cn(
-                            "home-page__hero-category",
-                            categories.find((c) => c.id === article.category)
-                              ?.color || "bg-primary",
-                          )}
-                        >
-                          {
-                            categories.find((c) => c.id === article.category)
-                              ?.icon
-                          }
-                          <span className="ml-2">
-                            {
-                              categories.find((c) => c.id === article.category)
-                                ?.name
-                            }
-                          </span>
-                        </Badge>
-                        <h1 className="home-page__hero-title">
-                          {article.title}
-                        </h1>
-                        <p className="home-page__hero-excerpt">
-                          {article.excerpt}
-                        </p>
-                        <div className="home-page__hero-meta">
-                          <div className="home-page__hero-meta-left">
-                            <div className="home-page__hero-meta-item">
-                              <User className="h-5 w-5" />
-                              <span>{article.author}</span>
+                      {/* Content Overlay */}
+                      <div className="home-page__hero-content">
+                        <div className="home-page__hero-content-wrapper">
+                          <Badge
+                            className={cn(
+                              "home-page__hero-category",
+                              category?.color || "bg-primary",
+                            )}
+                          >
+                            {getCategoryIcon(category?.slug || "general")}
+                            <span className="ml-2">
+                              {category?.name || "Sin categoría"}
+                            </span>
+                          </Badge>
+                          <h1 className="home-page__hero-title">
+                            {formattedArticle.title}
+                          </h1>
+                          <p className="home-page__hero-excerpt">
+                            {formattedArticle.excerpt}
+                          </p>
+                          <div className="home-page__hero-meta">
+                            <div className="home-page__hero-meta-left">
+                              <div className="home-page__hero-meta-item">
+                                <User className="h-5 w-5" />
+                                <span>{formattedArticle.author}</span>
+                              </div>
+                              <div className="home-page__hero-meta-item">
+                                <Calendar className="h-5 w-5" />
+                                <span>{formattedArticle.publishedAt}</span>
+                              </div>
+                              <div className="home-page__hero-meta-item">
+                                <Clock className="h-5 w-5" />
+                                <span>{formattedArticle.readTime} min</span>
+                              </div>
                             </div>
-                            <div className="home-page__hero-meta-item">
-                              <Calendar className="h-5 w-5" />
-                              <span>{article.publishedAt}</span>
-                            </div>
-                            <div className="home-page__hero-meta-item">
-                              <Clock className="h-5 w-5" />
-                              <span>{article.readTime} min</span>
-                            </div>
-                          </div>
-                          <div className="home-page__hero-meta-right">
-                            <div className="home-page__hero-meta-item">
-                              <Eye className="h-5 w-5" />
-                              <span>{article.views.toLocaleString()}</span>
-                            </div>
-                            <div className="home-page__hero-meta-item">
-                              <Heart className="h-5 w-5" />
-                              <span>{article.likes}</span>
+                            <div className="home-page__hero-meta-right">
+                              <div className="home-page__hero-meta-item">
+                                <Eye className="h-5 w-5" />
+                                <span>
+                                  {formattedArticle.views.toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="home-page__hero-meta-item">
+                                <Heart className="h-5 w-5" />
+                                <span>{formattedArticle.likes}</span>
+                              </div>
                             </div>
                           </div>
+                          <Link to={`/articulo/${formattedArticle.slug}`}>
+                            <Button size="lg" className="text-lg px-8 py-3">
+                              Leer Artículo Completo
+                              <ArrowRight className="h-5 w-5 ml-2" />
+                            </Button>
+                          </Link>
                         </div>
-                        <Link to={`/articulo/${article.id}`}>
-                          <Button size="lg" className="text-lg px-8 py-3">
-                            Leer Artículo Completo
-                            <ArrowRight className="h-5 w-5 ml-2" />
-                          </Button>
-                        </Link>
+                      </div>
+
+                      {/* Article Tags */}
+                      <div className="home-page__hero-tags">
+                        {formattedArticle.tags.map((tag: string) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="bg-white/20 text-white border-white/30 backdrop-blur-sm"
+                          >
+                            #{tag.trim()}
+                          </Badge>
+                        ))}
                       </div>
                     </div>
-
-                    {/* Article Tags */}
-                    <div className="home-page__hero-tags">
-                      {article.tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="secondary"
-                          className="bg-white/20 text-white border-white/30 backdrop-blur-sm"
-                        >
-                          #{tag}
-                        </Badge>
-                      ))}
-                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {/* Enhanced Slide Indicators */}
               <div className="home-page__hero-indicators">
                 {featuredArticles.map((_, index) => (
@@ -219,55 +256,55 @@ export default function HomePage() {
             <div className="home-page__hero-preview">
               <div className="home-page__hero-preview-content">
                 <div className="home-page__hero-preview-list">
-                  {featuredArticles.map((article, index) => (
-                    <div
-                      key={article.id}
-                      className={cn(
-                        "home-page__hero-preview-item",
-                        index === currentSlide &&
-                          "home-page__hero-preview-item--active",
-                      )}
-                      onClick={() => setCurrentSlide(index)}
-                    >
-                      <div className="home-page__hero-preview-image">
-                        <img
-                          src={article.imageUrl}
-                          alt={article.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="home-page__hero-preview-overlay">
-                          <div className="home-page__hero-preview-number">
-                            {String(index + 1).padStart(2, "0")}
+                  {featuredArticles.map((article, index) => {
+                    const formattedArticle = formatArticle(article);
+                    const category = getCategoryById(formattedArticle.category);
+                    return (
+                      <div
+                        key={article.id}
+                        className={cn(
+                          "home-page__hero-preview-item",
+                          index === currentSlide &&
+                            "home-page__hero-preview-item--active",
+                        )}
+                        onClick={() => setCurrentSlide(index)}
+                      >
+                        <div className="home-page__hero-preview-image">
+                          <img
+                            src={formattedArticle.imageUrl}
+                            alt={formattedArticle.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="home-page__hero-preview-overlay">
+                            <div className="home-page__hero-preview-number">
+                              {String(index + 1).padStart(2, "0")}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="home-page__hero-preview-info">
+                          <Badge
+                            className={cn(
+                              "home-page__hero-preview-category",
+                              category?.color || "bg-primary",
+                            )}
+                          >
+                            {getCategoryIcon(category?.slug || "general")}
+                          </Badge>
+                          <h4 className="home-page__hero-preview-item-title">
+                            {formattedArticle.title}
+                          </h4>
+                          <div className="home-page__hero-preview-meta">
+                            <span className="home-page__hero-preview-author">
+                              {formattedArticle.author}
+                            </span>
+                            <span className="home-page__hero-preview-time">
+                              {formattedArticle.readTime} min
+                            </span>
                           </div>
                         </div>
                       </div>
-                      <div className="home-page__hero-preview-info">
-                        <Badge
-                          className={cn(
-                            "home-page__hero-preview-category",
-                            categories.find((c) => c.id === article.category)
-                              ?.color || "bg-primary",
-                          )}
-                        >
-                          {
-                            categories.find((c) => c.id === article.category)
-                              ?.icon
-                          }
-                        </Badge>
-                        <h4 className="home-page__hero-preview-item-title">
-                          {article.title}
-                        </h4>
-                        <div className="home-page__hero-preview-meta">
-                          <span className="home-page__hero-preview-author">
-                            {article.author}
-                          </span>
-                          <span className="home-page__hero-preview-time">
-                            {article.readTime} min
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -469,67 +506,72 @@ export default function HomePage() {
                   <h2 className="home-page__section-title">Últimas Noticias</h2>
                 </div>
                 <div className="home-page__articles-grid">
-                  {latestArticles.map((article) => (
-                    <Link key={article.id} to={`/articulo/${article.id}`}>
-                      <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300">
-                        <div className="relative h-48 overflow-hidden">
-                          <img
-                            src={article.imageUrl}
-                            alt={article.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                          <Badge
-                            className={cn(
-                              "absolute top-3 left-3 shadow-lg",
-                              categories.find((c) => c.id === article.category)
-                                ?.color || "bg-primary",
-                            )}
-                          >
-                            {
-                              categories.find((c) => c.id === article.category)
-                                ?.name
-                            }
-                          </Badge>
-                          {article.trending && (
-                            <Badge className="absolute top-3 right-3 bg-red-500 shadow-lg">
-                              <TrendingUp className="h-3 w-3 mr-1" />
-                              Trending
+                  {latestArticles.map((article) => {
+                    const formattedArticle = formatArticle(article);
+                    const category = getCategoryById(formattedArticle.category);
+                    return (
+                      <Link
+                        key={article.id}
+                        to={`/articulo/${formattedArticle.slug}`}
+                      >
+                        <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300">
+                          <div className="relative h-48 overflow-hidden">
+                            <img
+                              src={formattedArticle.imageUrl}
+                              alt={formattedArticle.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                            <Badge
+                              className={cn(
+                                "absolute top-3 left-3 shadow-lg",
+                                category?.color || "bg-primary",
+                              )}
+                            >
+                              {category?.name || "Sin categoría"}
                             </Badge>
-                          )}
-                        </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                            {article.title}
-                          </h3>
-                          <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                            {article.excerpt}
-                          </p>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-                            <span className="font-medium">
-                              {article.author}
-                            </span>
-                            <span>{article.publishedAt}</span>
+                            {formattedArticle.trending && (
+                              <Badge className="absolute top-3 right-3 bg-red-500 shadow-lg">
+                                <TrendingUp className="h-3 w-3 mr-1" />
+                                Trending
+                              </Badge>
+                            )}
                           </div>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex items-center space-x-1">
-                                <Eye className="h-3 w-3" />
-                                <span>{article.views.toLocaleString()}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Heart className="h-3 w-3" />
-                                <span>{article.likes}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Clock className="h-3 w-3" />
-                                <span>{article.readTime} min</span>
+                          <CardContent className="p-4">
+                            <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                              {formattedArticle.title}
+                            </h3>
+                            <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                              {formattedArticle.excerpt}
+                            </p>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                              <span className="font-medium">
+                                {formattedArticle.author}
+                              </span>
+                              <span>{formattedArticle.publishedAt}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex items-center space-x-1">
+                                  <Eye className="h-3 w-3" />
+                                  <span>
+                                    {formattedArticle.views.toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Heart className="h-3 w-3" />
+                                  <span>{formattedArticle.likes}</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Clock className="h-3 w-3" />
+                                  <span>{formattedArticle.readTime} min</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    );
+                  })}
                 </div>
               </section>
 
@@ -542,64 +584,67 @@ export default function HomePage() {
                   </h2>
                 </div>
                 <div className="home-page__editors-grid">
-                  {editorsPicks.map((article, index) => (
-                    <Card
-                      key={article.id}
-                      className={cn(
-                        "group cursor-pointer hover:shadow-xl transition-all duration-300",
-                        index === 0 && "lg:col-span-2 lg:row-span-2",
-                      )}
-                    >
-                      <div
+                  {editorsPicks.map((article, index) => {
+                    const formattedArticle = formatArticle(article);
+                    return (
+                      <Card
+                        key={article.id}
                         className={cn(
-                          "relative overflow-hidden",
-                          index === 0 ? "h-64 lg:h-full" : "h-48",
+                          "group cursor-pointer hover:shadow-xl transition-all duration-300",
+                          index === 0 && "lg:col-span-2 lg:row-span-2",
                         )}
                       >
-                        <img
-                          src={article.imageUrl}
-                          alt={article.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute top-3 left-3">
-                          <Badge className="bg-yellow-500 text-yellow-900 shadow-lg">
-                            <Star className="h-3 w-3 mr-1" />
-                            Editor's Pick
-                          </Badge>
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                        <div className="absolute bottom-4 left-4 right-4 text-white">
-                          {index === 0 && (
-                            <>
-                              <h3 className="font-bold text-2xl mb-2 line-clamp-2">
-                                {article.title}
-                              </h3>
-                              <p className="text-white/90 mb-3 line-clamp-3">
-                                {article.excerpt}
-                              </p>
-                            </>
+                        <div
+                          className={cn(
+                            "relative overflow-hidden",
+                            index === 0 ? "h-64 lg:h-full" : "h-48",
                           )}
-                          <div className="flex items-center space-x-4 text-sm">
-                            <span>{article.author}</span>
-                            <div className="flex items-center space-x-1">
-                              <Clock className="h-3 w-3" />
-                              <span>{article.readTime} min</span>
+                        >
+                          <img
+                            src={formattedArticle.imageUrl}
+                            alt={formattedArticle.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute top-3 left-3">
+                            <Badge className="bg-yellow-500 text-yellow-900 shadow-lg">
+                              <Star className="h-3 w-3 mr-1" />
+                              Editor's Pick
+                            </Badge>
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          <div className="absolute bottom-4 left-4 right-4 text-white">
+                            {index === 0 && (
+                              <>
+                                <h3 className="font-bold text-2xl mb-2 line-clamp-2">
+                                  {formattedArticle.title}
+                                </h3>
+                                <p className="text-white/90 mb-3 line-clamp-3">
+                                  {formattedArticle.excerpt}
+                                </p>
+                              </>
+                            )}
+                            <div className="flex items-center space-x-4 text-sm">
+                              <span>{formattedArticle.author}</span>
+                              <div className="flex items-center space-x-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{formattedArticle.readTime} min</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                      {index !== 0 && (
-                        <CardContent className="p-4">
-                          <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                            {article.title}
-                          </h3>
-                          <p className="text-muted-foreground text-sm line-clamp-2">
-                            {article.excerpt}
-                          </p>
-                        </CardContent>
-                      )}
-                    </Card>
-                  ))}
+                        {index !== 0 && (
+                          <CardContent className="p-4">
+                            <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                              {formattedArticle.title}
+                            </h3>
+                            <p className="text-muted-foreground text-sm line-clamp-2">
+                              {formattedArticle.excerpt}
+                            </p>
+                          </CardContent>
+                        )}
+                      </Card>
+                    );
+                  })}
                 </div>
               </section>
 
@@ -612,57 +657,52 @@ export default function HomePage() {
                   </h2>
                 </div>
                 <div className="home-page__video-grid">
-                  {videoContent.map((video) => (
-                    <Card
-                      key={video.id}
-                      className="group cursor-pointer hover:shadow-xl transition-all duration-300"
-                    >
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={video.thumbnail}
-                          alt={video.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                            <Play className="h-6 w-6 text-white ml-1" />
+                  {videoContent.map((video) => {
+                    const category = getCategoryById(video.category);
+                    return (
+                      <Card
+                        key={video.id}
+                        className="group cursor-pointer hover:shadow-xl transition-all duration-300"
+                      >
+                        <div className="relative h-48 overflow-hidden">
+                          <img
+                            src={video.thumbnail}
+                            alt={video.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                              <Play className="h-6 w-6 text-white ml-1" />
+                            </div>
+                          </div>
+                          <div className="absolute bottom-3 right-3 bg-black/70 text-white px-2 py-1 rounded text-sm">
+                            {video.duration}
+                          </div>
+                          <div className="absolute top-3 left-3">
+                            <Badge className={category?.color || "bg-primary"}>
+                              {category?.name || "Video"}
+                            </Badge>
                           </div>
                         </div>
-                        <div className="absolute bottom-3 right-3 bg-black/70 text-white px-2 py-1 rounded text-sm">
-                          {video.duration}
-                        </div>
-                        <div className="absolute top-3 left-3">
-                          <Badge
-                            className={
-                              categories.find((c) => c.id === video.category)
-                                ?.color || "bg-primary"
-                            }
-                          >
-                            {
-                              categories.find((c) => c.id === video.category)
-                                ?.name
-                            }
-                          </Badge>
-                        </div>
-                      </div>
-                      <CardContent className="p-4">
-                        <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                          {video.title}
-                        </h3>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                          <div className="flex items-center space-x-1">
-                            <Eye className="h-3 w-3" />
-                            <span>{video.views} vistas</span>
+                        <CardContent className="p-4">
+                          <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                            {video.title}
+                          </h3>
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                            <div className="flex items-center space-x-1">
+                              <Eye className="h-3 w-3" />
+                              <span>{video.views} vistas</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Play className="h-3 w-3" />
+                              <span>{video.duration}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <Play className="h-3 w-3" />
-                            <span>{video.duration}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </section>
 
@@ -673,60 +713,65 @@ export default function HomePage() {
                   <h2 className="home-page__section-title">Tendencias</h2>
                 </div>
                 <div className="home-page__trending-grid">
-                  {trendingArticles.map((article) => (
-                    <Link key={article.id} to={`/articulo/${article.id}`}>
-                      <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300">
-                        <div className="relative h-48 overflow-hidden">
-                          <img
-                            src={article.imageUrl}
-                            alt={article.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                          <Badge
-                            className={cn(
-                              "absolute top-3 left-3 shadow-lg",
-                              categories.find((c) => c.id === article.category)
-                                ?.color || "bg-primary",
-                            )}
-                          >
-                            {
-                              categories.find((c) => c.id === article.category)
-                                ?.name
-                            }
-                          </Badge>
-                          <Badge className="absolute top-3 right-3 bg-red-500 shadow-lg">
-                            <TrendingUp className="h-3 w-3 mr-1" />
-                            Trending
-                          </Badge>
-                        </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                            {article.title}
-                          </h3>
-                          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                            {article.excerpt}
-                          </p>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex items-center space-x-1">
-                                <Eye className="h-3 w-3" />
-                                <span>{article.views.toLocaleString()}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Heart className="h-3 w-3" />
-                                <span>{article.likes}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Clock className="h-3 w-3" />
-                                <span>{article.readTime} min</span>
-                              </div>
-                            </div>
-                            <span>{article.publishedAt}</span>
+                  {trendingArticles.map((article) => {
+                    const formattedArticle = formatArticle(article);
+                    const category = getCategoryById(formattedArticle.category);
+                    return (
+                      <Link
+                        key={article.id}
+                        to={`/articulo/${formattedArticle.slug}`}
+                      >
+                        <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300">
+                          <div className="relative h-48 overflow-hidden">
+                            <img
+                              src={formattedArticle.imageUrl}
+                              alt={formattedArticle.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                            <Badge
+                              className={cn(
+                                "absolute top-3 left-3 shadow-lg",
+                                category?.color || "bg-primary",
+                              )}
+                            >
+                              {category?.name || "Sin categoría"}
+                            </Badge>
+                            <Badge className="absolute top-3 right-3 bg-red-500 shadow-lg">
+                              <TrendingUp className="h-3 w-3 mr-1" />
+                              Trending
+                            </Badge>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
+                          <CardContent className="p-4">
+                            <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                              {formattedArticle.title}
+                            </h3>
+                            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+                              {formattedArticle.excerpt}
+                            </p>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex items-center space-x-1">
+                                  <Eye className="h-3 w-3" />
+                                  <span>
+                                    {formattedArticle.views.toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Heart className="h-3 w-3" />
+                                  <span>{formattedArticle.likes}</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Clock className="h-3 w-3" />
+                                  <span>{formattedArticle.readTime} min</span>
+                                </div>
+                              </div>
+                              <span>{formattedArticle.publishedAt}</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    );
+                  })}
                 </div>
               </section>
             </div>

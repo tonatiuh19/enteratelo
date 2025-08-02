@@ -40,18 +40,61 @@ export interface Article {
   id: string;
   title: string;
   slug: string;
-  content: string;
   excerpt: string;
-  authorId: string;
-  authorName: string;
-  category: string;
-  tags: string[];
-  imageUrl: string;
-  publishedAt: string;
-  updatedAt: string;
-  status: "draft" | "published" | "archived";
-  viewCount: number;
-  featured: boolean;
+  content: string;
+  category_id: string;
+  author_id: string;
+  meta_title: string;
+  meta_description: string;
+  meta_keywords: string;
+  canonical_url: string;
+  featured_image_url: string;
+  featured_image_alt: string;
+  featured_image_caption: string;
+  gallery: string;
+  status: string;
+  published_at: Date;
+  scheduled_at: null;
+  is_featured: string;
+  is_trending: string;
+  is_breaking_news: string;
+  is_editors_pick: string;
+  view_count: string;
+  like_count: string;
+  comment_count: string;
+  share_count: string;
+  estimated_read_time: string;
+  word_count: string;
+  tags: string;
+  external_source: string;
+  language: string;
+  created_at: Date;
+  updated_at: Date;
+  content_blocks: string;
+  is_active: string;
+  author_name: string;
+
+  // Additional computed properties for backwards compatibility
+  authorId?: string;
+  authorName?: string;
+  category?: string;
+  imageUrl?: string;
+  publishedAt?: string;
+  updatedAt?: string;
+  viewCount?: number;
+  featured?: boolean;
+  trending?: boolean;
+  likes?: number;
+  readTime?: number;
+  views?: number;
+  author?: string;
+}
+
+export interface HomeModel {
+  carousel: Article[];
+  latest: Article[];
+  trending: Article[];
+  editors_picks: Article[];
 }
 
 export interface ArticlesState {
@@ -66,6 +109,7 @@ export interface ArticlesState {
     totalItems: number;
     itemsPerPage: number;
   };
+  homepage: HomeModel;
 }
 
 // UI State

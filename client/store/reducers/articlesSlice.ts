@@ -11,6 +11,7 @@ import {
   deleteArticle,
   insertArticle,
   hideArticle,
+  fetchHomepageArticles,
 } from "../actions/articlesActions";
 
 const initialState: ArticlesState = {
@@ -24,6 +25,12 @@ const initialState: ArticlesState = {
     totalPages: 1,
     totalItems: 0,
     itemsPerPage: 10,
+  },
+  homepage: {
+    carousel: [],
+    latest: [],
+    trending: [],
+    editors_picks: [],
   },
 };
 
@@ -53,6 +60,26 @@ const articlesSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    // Fetch homepage articles
+    builder
+      .addCase(fetchHomepageArticles.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchHomepageArticles.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+        state.homepage = {
+          carousel: action.payload.carousel || [],
+          latest: action.payload.latest || [],
+          trending: action.payload.trending || [],
+          editors_picks: action.payload.editors_picks || [],
+        };
+      })
+      .addCase(fetchHomepageArticles.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      });
     // Fetch articles
     builder
       .addCase(fetchArticles.pending, (state) => {
